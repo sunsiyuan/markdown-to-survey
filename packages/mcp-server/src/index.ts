@@ -4,30 +4,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 
-type Survey = {
-  id: string
-  title: string
-  description?: string
-  schema: {
-    sections: Array<{
-      questions: Array<{
-        id: string
-        label: string
-        type: 'single_choice' | 'multi_choice' | 'text' | 'matrix' | 'scale'
-        options?: Array<{ id: string; label: string }>
-        rows?: Array<{ id: string; label: string }>
-        columns?: Array<{
-          id: string
-          label: string
-          options: Array<{ id: string; label: string }>
-        }>
-        min?: number
-        max?: number
-      }>
-    }>
-  }
-}
-
 type ResponseRecord = {
   id: string
   answers: Record<string, string | string[] | number>
@@ -151,32 +127,30 @@ server.registerTool(
   {
     title: 'Get Results',
     description:
-      'Get the current results of a survey by its result ID (from the results URL).',
+      'Get the current results of a survey by its survey ID.',
     inputSchema: {
-      result_id: z.string().min(1),
+      survey_id: z.string().min(1),
     },
   },
-  async ({ result_id: resultId }) => {
+  async ({ survey_id: surveyId }) => {
     const apiKeyError = requireApiKey()
     if (apiKeyError) {
       return apiKeyError
     }
 
     const surveyResponse = await fetch(
-      `${API_BASE_URL}/api/surveys/by-result/${encodeURIComponent(resultId)}`,
+      `${API_BASE_URL}/api/surveys/${encodeURIComponent(surveyId)}`,
     )
     const surveyPayload = (await surveyResponse.json().catch(() => null)) as
       | {
-          survey_id?: string
+          id?: string
           title?: string
-          description?: string
-          schema?: Survey['schema']
           responses?: ResponseRecord[]
           error?: string
         }
       | null
 
-    if (!surveyResponse.ok || !surveyPayload?.survey_id || !surveyPayload.schema) {
+    if (!surveyResponse.ok || !surveyPayload?.id) {
       return {
         content: [
           {
@@ -189,7 +163,7 @@ server.registerTool(
     }
 
     const responsesResponse = await fetch(
-      `${API_BASE_URL}/api/surveys/${encodeURIComponent(surveyPayload.survey_id)}/responses`,
+      `${API_BASE_URL}/api/surveys/${encodeURIComponent(surveyId)}/responses`,
       {
         headers: {
           Authorization: `Bearer ${API_KEY}`,
