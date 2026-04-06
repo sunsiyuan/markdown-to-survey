@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase'
 
 import { ChoiceResult } from './ChoiceResult'
 import { MatrixResult } from './MatrixResult'
+import { ScaleResult } from './ScaleResult'
 import { TextResult } from './TextResult'
 
 type ResultsDashboardProps = {
@@ -142,6 +143,8 @@ export function ResultsDashboard({
                     <div className="mt-5">
                       {aggregatedQuestion.type === 'matrix' ? (
                         <MatrixResult question={aggregatedQuestion} />
+                      ) : aggregatedQuestion.type === 'scale' ? (
+                        <ScaleResult question={aggregatedQuestion} />
                       ) : aggregatedQuestion.type === 'text' ? (
                         <TextResult question={aggregatedQuestion} />
                       ) : (

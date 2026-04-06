@@ -13,7 +13,7 @@ type Survey = {
       questions: Array<{
         id: string
         label: string
-        type: 'single_choice' | 'multi_choice' | 'text' | 'matrix'
+        type: 'single_choice' | 'multi_choice' | 'text' | 'matrix' | 'scale'
         options?: Array<{ id: string; label: string }>
         rows?: Array<{ id: string; label: string }>
         columns?: Array<{
@@ -21,6 +21,8 @@ type Survey = {
           label: string
           options: Array<{ id: string; label: string }>
         }>
+        min?: number
+        max?: number
       }>
     }>
   }
@@ -28,9 +30,49 @@ type Survey = {
 
 type ResponseRecord = {
   id: string
-  answers: Record<string, string | string[]>
+  answers: Record<string, string | string[] | number>
   created_at: string
 }
+
+type ResultsQuestion =
+  | {
+      id: string
+      type: 'single_choice' | 'multi_choice'
+      label: string
+      options: Array<{ id: string; label: string }>
+      tally: Record<string, number>
+    }
+  | {
+      id: string
+      type: 'text'
+      label: string
+      responses: Array<{ value: string; created_at: string }>
+    }
+  | {
+      id: string
+      type: 'matrix'
+      label: string
+      rows: Array<{ id: string; label: string }>
+      columns: Array<{
+        id: string
+        label: string
+        options: Array<{ id: string; label: string }>
+      }>
+      tally: Record<string, Record<string, number>>
+    }
+  | {
+      id: string
+      type: 'scale'
+      label: string
+      min: number
+      max: number
+      stats: {
+        count: number
+        mean: number
+        median: number
+        distribution: Record<string, number>
+      }
+    }
 
 const API_BASE_URL = process.env.MTS_API_URL ?? 'https://mts.vercel.app'
 
@@ -44,7 +86,7 @@ server.registerTool(
   {
     title: 'Create Survey',
     description:
-      'Create an interactive survey from a Markdown string. Returns a survey URL for respondents and a results URL for the survey creator.',
+      'Create an interactive survey from a Markdown string. Returns a survey URL for respondents and a survey ID for future result lookup.',
     inputSchema: {
       markdown: z.string().min(1),
     },
@@ -130,12 +172,13 @@ server.registerTool(
     const responsesPayload = (await responsesResponse.json().catch(() => null)) as
       | {
           count?: number
-          responses?: ResponseRecord[]
+          questions?: ResultsQuestion[]
+          raw?: ResponseRecord[]
           error?: string
         }
       | null
 
-    if (!responsesResponse.ok || !responsesPayload?.responses) {
+    if (!responsesResponse.ok || !responsesPayload?.questions) {
       return {
         content: [
           {
@@ -149,9 +192,8 @@ server.registerTool(
 
     const lines = formatResultsSummary(
       surveyPayload.title ?? 'Survey results',
-      surveyPayload.schema,
-      responsesPayload.responses,
-      responsesPayload.count ?? responsesPayload.responses.length,
+      responsesPayload.questions,
+      responsesPayload.count ?? responsesPayload.raw?.length ?? 0,
     )
 
     return {
@@ -175,77 +217,86 @@ function extractSurveyId(surveyUrl: string) {
 
 function formatResultsSummary(
   title: string,
-  schema: Survey['schema'],
-  responses: ResponseRecord[],
+  questions: ResultsQuestion[],
   responseCount: number,
 ) {
-  const lines = [`${title}`, `Responses: ${responseCount}`, '']
+  const lines = [`Survey: ${title} (${responseCount} responses)`, '']
 
-  schema.sections.forEach((section) => {
-    section.questions.forEach((question) => {
-      lines.push(`${question.label}`)
+  questions.forEach((question, index) => {
+    lines.push(`Q${index}. (${question.type}) ${question.label}`)
 
-      if (question.type === 'text') {
-        const textValues = responses
-          .map((response) => response.answers[question.id])
-          .filter((answer): answer is string => typeof answer === 'string' && answer.length > 0)
-          .slice(0, 5)
+    if (question.type === 'text') {
+      const textResponses = question.responses.slice(0, 5)
 
-        if (textValues.length === 0) {
-          lines.push('- No text responses yet')
-        } else {
-          textValues.forEach((value) => {
-            lines.push(`- ${value}`)
-          })
-        }
-      } else if (question.type === 'matrix') {
-        const options = question.columns?.[0]?.options ?? []
-        const rowCounts = (question.rows ?? []).map((row) => {
-          const counts = new Map(options.map((option) => [option.id, 0]))
-
-          responses.forEach((response) => {
-            const answer = response.answers[question.id]
-            const values = Array.isArray(answer) ? answer : []
-
-            values.forEach((entry) => {
-              const [rowId, optionId] = entry.split(':')
-              if (rowId === row.id && counts.has(optionId)) {
-                counts.set(optionId, (counts.get(optionId) ?? 0) + 1)
-              }
-            })
-          })
-
-          const summary = options
-            .map((option) => `${option.label}: ${counts.get(option.id) ?? 0}`)
-            .join(', ')
-
-          return `- ${row.label}: ${summary}`
-        })
-
-        lines.push(...rowCounts)
+      if (textResponses.length === 0) {
+        lines.push('  No text responses yet')
       } else {
-        const counts = new Map((question.options ?? []).map((option) => [option.id, 0]))
-
-        responses.forEach((response) => {
-          const answer = response.answers[question.id]
-          const values = Array.isArray(answer) ? answer : typeof answer === 'string' ? [answer] : []
-
-          values.forEach((value) => {
-            const optionId = value.split('::')[0] ?? ''
-            if (counts.has(optionId)) {
-              counts.set(optionId, (counts.get(optionId) ?? 0) + 1)
-            }
-          })
+        textResponses.forEach((response) => {
+          lines.push(`  "${response.value}" (${response.created_at.slice(0, 10)})`)
         })
 
-        ;(question.options ?? []).forEach((option) => {
-          lines.push(`- ${option.label}: ${counts.get(option.id) ?? 0}`)
-        })
+        if (question.responses.length > textResponses.length) {
+          lines.push(`  ... and ${question.responses.length - textResponses.length} more`)
+        }
       }
 
       lines.push('')
+      return
+    }
+
+    if (question.type === 'matrix') {
+      const options = question.columns[0]?.options ?? []
+
+      question.rows.forEach((row) => {
+        const summary = options
+          .map((option) => `${option.label}: ${question.tally[row.id]?.[option.id] ?? 0}`)
+          .join(', ')
+        lines.push(`  ${row.label}: ${summary}`)
+      })
+
+      lines.push('')
+      return
+    }
+
+    if (question.type === 'scale') {
+      lines.push(
+        `  Mean: ${question.stats.mean} | Median: ${question.stats.median} | Responses: ${question.stats.count}`,
+      )
+      lines.push(`  Distribution: ${formatScaleDistribution(question.stats.distribution)}`)
+      lines.push('')
+      return
+    }
+
+    const totalSelections = Object.values(question.tally).reduce((sum, count) => sum + count, 0)
+
+    question.options.forEach((option) => {
+      const count = question.tally[option.id] ?? 0
+      const percentage =
+        totalSelections === 0 ? 0 : Number(((count / totalSelections) * 100).toFixed(1))
+      lines.push(`  ${option.label}: ${count} (${percentage}%)`)
     })
+
+    lines.push('')
   })
 
   return lines
+}
+
+function formatScaleDistribution(distribution: Record<string, number>) {
+  const entries = Object.entries(distribution)
+  const maxCount = Math.max(...entries.map(([, count]) => count), 0)
+
+  return entries
+    .map(([value, count]) => `${value}${count === 0 ? '▁' : scaleBlock(count, maxCount)}`)
+    .join(' ')
+}
+
+function scaleBlock(count: number, maxCount: number) {
+  if (maxCount === 0 || count <= 0) {
+    return '▁'
+  }
+
+  const blocks = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█']
+  const index = Math.max(1, Math.ceil((count / maxCount) * (blocks.length - 1)))
+  return blocks[index] ?? '█'
 }

@@ -13,7 +13,7 @@ type SurveyFormProps = {
   survey: Survey
 }
 
-type AnswerMap = Record<string, string | string[]>
+type AnswerMap = Record<string, string | string[] | number>
 
 type OptionTextMap = Record<string, Record<string, string>>
 
@@ -157,9 +157,16 @@ export function SurveyForm({ surveyId, survey }: SurveyFormProps) {
   )
 }
 
-function isQuestionAnswered(question: Question, value: string | string[] | undefined) {
+function isQuestionAnswered(
+  question: Question,
+  value: string | string[] | number | undefined,
+) {
   if (question.type === 'text') {
     return typeof value === 'string' && value.trim().length > 0
+  }
+
+  if (question.type === 'scale') {
+    return typeof value === 'number'
   }
 
   if (question.type === 'matrix') {

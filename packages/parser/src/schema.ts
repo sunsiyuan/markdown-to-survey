@@ -16,6 +16,7 @@ export type QuestionType =
   | 'multi_choice'
   | 'text'
   | 'matrix'
+  | 'scale'
 
 export interface Question {
   id: string
@@ -26,6 +27,10 @@ export interface Question {
   options?: Option[]
   rows?: MatrixRow[]
   columns?: MatrixColumn[]
+  min?: number
+  max?: number
+  minLabel?: string
+  maxLabel?: string
 }
 
 export interface Option {

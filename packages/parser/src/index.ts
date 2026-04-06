@@ -38,6 +38,7 @@ type StrongSegment = {
 const QUESTION_HINT_RE = /^[A-Z]\d+\./i
 const MULTI_CHOICE_RE = /可多选|多选|select all|multiple/i
 const UNDERSCORE_RE = /_{3,}/
+const SCALE_RE = /^\[scale\s+(\d+)-(\d+)(.*)\]$/i
 
 export function parseSurvey(markdown: string): Survey {
   if (!markdown.trim()) {
@@ -166,6 +167,15 @@ export function parseSurvey(markdown: string): Survey {
       }
 
       case 'paragraph': {
+        const scaleDefinition = currentQuestion
+          ? parseScaleDefinition(normalizeWhitespace(toPlainText(node)))
+          : null
+
+        if (currentQuestion && scaleDefinition) {
+          setScaleQuestion(currentQuestion, scaleDefinition)
+          return
+        }
+
         if (looksLikeTable(raw)) {
           const question =
             currentQuestion ??
@@ -309,6 +319,10 @@ function setChoiceQuestion(question: Question, options: Option[]) {
   }))
   delete question.rows
   delete question.columns
+  delete question.min
+  delete question.max
+  delete question.minLabel
+  delete question.maxLabel
 }
 
 function setMatrixQuestion(question: Question, rawTable: string) {
@@ -378,6 +392,62 @@ function setMatrixQuestion(question: Question, rawTable: string) {
   question.rows = matrixRows
   question.columns = columns
   delete question.options
+  delete question.min
+  delete question.max
+  delete question.minLabel
+  delete question.maxLabel
+}
+
+function setScaleQuestion(
+  question: Question,
+  scale: {
+    min: number
+    max: number
+    minLabel?: string
+    maxLabel?: string
+  },
+) {
+  question.type = 'scale'
+  question.min = scale.min
+  question.max = scale.max
+  question.minLabel = scale.minLabel
+  question.maxLabel = scale.maxLabel
+  delete question.options
+  delete question.rows
+  delete question.columns
+}
+
+function parseScaleDefinition(input: string) {
+  const match = input.match(SCALE_RE)
+
+  if (!match) {
+    return null
+  }
+
+  const min = Number.parseInt(match[1] ?? '', 10)
+  const max = Number.parseInt(match[2] ?? '', 10)
+
+  if (min >= max) {
+    throw new Error('Scale min must be less than max')
+  }
+
+  if (max - min + 1 > 11) {
+    throw new Error('Scale range cannot exceed 11 points')
+  }
+
+  const attributes = match[3] ?? ''
+
+  return {
+    min,
+    max,
+    minLabel: extractScaleAttribute(attributes, 'min-label'),
+    maxLabel: extractScaleAttribute(attributes, 'max-label'),
+  }
+}
+
+function extractScaleAttribute(input: string, attributeName: 'min-label' | 'max-label') {
+  const match = input.match(new RegExp(`${attributeName}="([^"]*)"`, 'i'))
+  return match?.[1]
 }
 
 function parseCheckboxOptions(input: string): Option[] {

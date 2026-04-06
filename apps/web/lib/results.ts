@@ -36,10 +36,25 @@ export type MatrixResultsQuestion = ResultsQuestionBase & {
   tally: Record<string, Record<string, number>>
 }
 
+export type ScaleResultsQuestion = ResultsQuestionBase & {
+  type: 'scale'
+  min: number
+  max: number
+  minLabel?: string
+  maxLabel?: string
+  stats: {
+    count: number
+    mean: number
+    median: number
+    distribution: Record<string, number>
+  }
+}
+
 export type ResultsQuestion =
   | ChoiceResultsQuestion
   | TextResultsQuestion
   | MatrixResultsQuestion
+  | ScaleResultsQuestion
 
 export type AggregatedSurveyResults = {
   count: number
@@ -81,6 +96,48 @@ function aggregateQuestion(question: Question, responses: ResponseRecord[]): Res
           } => typeof entry.value === 'string' && entry.value.trim().length > 0,
         )
         .slice(0, 20),
+    }
+  }
+
+  if (question.type === 'scale') {
+    const min = question.min ?? 0
+    const max = question.max ?? 0
+    const values = responses
+      .map((response) => response.answers[question.id])
+      .filter((value): value is number => typeof value === 'number')
+      .sort((left, right) => left - right)
+    const distribution = Array.from({ length: max - min + 1 }, (_, offset) => min + offset).reduce<
+      Record<string, number>
+    >((accumulator, point) => {
+      accumulator[String(point)] = 0
+      return accumulator
+    }, {})
+
+    values.forEach((value) => {
+      const key = String(value)
+      if (typeof distribution[key] === 'number') {
+        distribution[key] += 1
+      }
+    })
+
+    return {
+      id: question.id,
+      type: 'scale',
+      label: question.label,
+      description: question.description,
+      min,
+      max,
+      minLabel: question.minLabel,
+      maxLabel: question.maxLabel,
+      stats: {
+        count: values.length,
+        mean:
+          values.length === 0
+            ? 0
+            : Number((values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1)),
+        median: values.length === 0 ? 0 : calculateMedian(values),
+        distribution,
+      },
     }
   }
 
@@ -154,4 +211,16 @@ function aggregateQuestion(question: Question, responses: ResponseRecord[]): Res
     options,
     tally,
   }
+}
+
+function calculateMedian(values: number[]) {
+  const middleIndex = Math.floor(values.length / 2)
+
+  if (values.length % 2 === 1) {
+    return values[middleIndex] ?? 0
+  }
+
+  const left = values[middleIndex - 1] ?? 0
+  const right = values[middleIndex] ?? 0
+  return Number(((left + right) / 2).toFixed(1))
 }

@@ -10,7 +10,7 @@ type RouteContext = {
   params: Promise<{ id: string }>
 }
 
-type ResponseAnswers = Record<string, string | string[]>
+type ResponseAnswers = Record<string, string | string[] | number>
 
 export async function POST(request: Request, context: RouteContext) {
   const { id: surveyId } = await context.params
