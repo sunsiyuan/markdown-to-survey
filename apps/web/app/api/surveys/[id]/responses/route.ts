@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import type { Survey } from '@mts/parser'
 
 import { requireAuth } from '@/lib/auth'
+import { getSurveyClosureReason } from '@/lib/lifecycle'
 import { aggregateSurveyResults } from '@/lib/results'
 import { supabase } from '@/lib/supabase'
 
@@ -20,6 +21,34 @@ export async function POST(request: Request, context: RouteContext) {
 
   if (!answers || typeof answers !== 'object') {
     return NextResponse.json({ error: 'Answers are required' }, { status: 400 })
+  }
+
+  const { data: survey, error: surveyError } = await supabase
+    .from('surveys')
+    .select('id, status, response_count, max_responses, expires_at')
+    .eq('id', surveyId)
+    .maybeSingle()
+
+  if (surveyError) {
+    return NextResponse.json({ error: surveyError.message }, { status: 500 })
+  }
+
+  if (!survey) {
+    return NextResponse.json({ error: 'Survey not found' }, { status: 404 })
+  }
+
+  const closureReason = getSurveyClosureReason(survey)
+
+  if (closureReason === 'closed') {
+    return NextResponse.json({ error: 'This survey is closed' }, { status: 410 })
+  }
+
+  if (closureReason === 'expired') {
+    return NextResponse.json({ error: 'This survey has expired' }, { status: 410 })
+  }
+
+  if (closureReason === 'full') {
+    return NextResponse.json({ error: 'This survey is full' }, { status: 410 })
   }
 
   const responseId = nanoid(12)

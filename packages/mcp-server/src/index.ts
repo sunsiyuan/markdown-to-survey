@@ -305,6 +305,96 @@ server.registerTool(
   },
 )
 
+server.registerTool(
+  'close_survey',
+  {
+    title: 'Close Survey',
+    description: 'Close a survey so it no longer accepts responses.',
+    inputSchema: {
+      survey_id: z.string().min(1),
+    },
+  },
+  async ({ survey_id: surveyId }) => {
+    const apiKeyError = requireApiKey()
+    if (apiKeyError) {
+      return apiKeyError
+    }
+
+    const surveyResponse = await fetch(`${API_BASE_URL}/api/surveys/${encodeURIComponent(surveyId)}`)
+    const surveyPayload = (await surveyResponse.json().catch(() => null)) as
+      | { id?: string; title?: string; error?: string }
+      | null
+
+    if (!surveyResponse.ok || !surveyPayload?.id) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Failed to fetch survey: ${surveyPayload?.error ?? surveyResponse.statusText}`,
+          },
+        ],
+        isError: true,
+      }
+    }
+
+    const closeResponse = await fetch(`${API_BASE_URL}/api/surveys/${encodeURIComponent(surveyId)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${API_KEY}`,
+      },
+      body: JSON.stringify({ status: 'closed' }),
+    })
+    const closePayload = (await closeResponse.json().catch(() => null)) as
+      | { id?: string; error?: string }
+      | null
+
+    if (!closeResponse.ok || !closePayload?.id) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Failed to close survey: ${closePayload?.error ?? closeResponse.statusText}`,
+          },
+        ],
+        isError: true,
+      }
+    }
+
+    const resultsResponse = await fetch(
+      `${API_BASE_URL}/api/surveys/${encodeURIComponent(surveyId)}/responses`,
+      {
+        headers: {
+          Authorization: `Bearer ${API_KEY}`,
+        },
+      },
+    )
+    const resultsPayload = (await resultsResponse.json().catch(() => null)) as
+      | { count?: number; error?: string }
+      | null
+
+    if (!resultsResponse.ok) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Survey '${surveyPayload.title ?? surveyId}' closed.`,
+          },
+        ],
+      }
+    }
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Survey '${surveyPayload.title ?? surveyId}' closed. Total responses received: ${resultsPayload?.count ?? 0}`,
+        },
+      ],
+    }
+  },
+)
+
 await server.connect(new StdioServerTransport())
 
 function requireApiKey() {

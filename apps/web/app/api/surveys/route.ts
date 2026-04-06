@@ -19,10 +19,17 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json().catch(() => null)) as
-    | { markdown?: string; schema?: SurveyInput }
+    | {
+        markdown?: string
+        schema?: SurveyInput
+        max_responses?: number
+        expires_at?: string | null
+      }
     | null
   const markdown = body?.markdown
   const schemaInput = body?.schema
+  const maxResponses = body?.max_responses
+  const expiresAt = body?.expires_at
 
   if (!markdown && !schemaInput) {
     return NextResponse.json(
@@ -34,6 +41,27 @@ export async function POST(request: Request) {
   if (markdown && schemaInput) {
     return NextResponse.json(
       { error: 'Provide either markdown or schema, not both' },
+      { status: 400 },
+    )
+  }
+
+  if (
+    maxResponses !== undefined &&
+    (!Number.isInteger(maxResponses) || maxResponses <= 0)
+  ) {
+    return NextResponse.json(
+      { error: 'max_responses must be a positive integer' },
+      { status: 400 },
+    )
+  }
+
+  if (
+    expiresAt !== undefined &&
+    expiresAt !== null &&
+    Number.isNaN(Date.parse(expiresAt))
+  ) {
+    return NextResponse.json(
+      { error: 'expires_at must be a valid ISO date' },
       { status: 400 },
     )
   }
@@ -69,6 +97,9 @@ export async function POST(request: Request) {
     schema: survey,
     markdown: markdown ?? JSON.stringify(schemaInput),
     response_count: 0,
+    status: 'open',
+    max_responses: maxResponses ?? null,
+    expires_at: expiresAt ?? null,
   })
 
   if (error) {
@@ -92,7 +123,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabase
     .from('surveys')
-    .select('id, title, response_count, created_at')
+    .select('id, title, status, response_count, max_responses, expires_at, created_at')
     .eq('api_key_id', auth.keyId)
     .order('created_at', { ascending: false })
 
@@ -100,12 +131,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(
-    (data ?? []).map((survey) => ({
-      ...survey,
-      status: 'open',
-    })),
-  )
+  return NextResponse.json(data ?? [])
 }
 
 function countQuestions(survey: Survey) {
