@@ -1,22 +1,37 @@
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 
+export {
+  buildSurveyFromInput,
+  SurveyInputValidationError,
+} from './builder.js'
 import type {
   MatrixColumn,
   MatrixRow,
+  MatrixColumnInput,
+  MatrixRowInput,
   Option,
+  OptionInput,
   Question,
+  QuestionInput,
   Survey,
+  SurveyInput,
 } from './schema.js'
 
 export type {
   MatrixColumn,
+  MatrixColumnInput,
   MatrixRow,
+  MatrixRowInput,
   Option,
+  OptionInput,
   Question,
+  QuestionInput,
   QuestionType,
   Section,
+  SectionInput,
   Survey,
+  SurveyInput,
 } from './schema.js'
 
 type MdNode = {

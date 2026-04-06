@@ -71,15 +71,40 @@ server.registerTool(
   {
     title: 'Create Survey',
     description:
-      'Create an interactive survey from a Markdown string. Returns a survey URL for respondents and a survey ID for future result lookup.',
+      'Create an interactive survey from Markdown or a JSON schema object. Returns a survey URL for respondents and a survey ID for future result lookup.',
     inputSchema: {
-      markdown: z.string().min(1),
+      markdown: z.string().min(1).optional(),
+      schema: z.record(z.string(), z.unknown()).optional(),
     },
   },
-  async ({ markdown }) => {
+  async ({ markdown, schema }) => {
     const apiKeyError = requireApiKey()
     if (apiKeyError) {
       return apiKeyError
+    }
+
+    if (!markdown && !schema) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: 'Provide either markdown or schema.',
+          },
+        ],
+        isError: true,
+      }
+    }
+
+    if (markdown && schema) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: 'Provide either markdown or schema, not both.',
+          },
+        ],
+        isError: true,
+      }
     }
 
     const response = await fetch(`${API_BASE_URL}/api/surveys`, {
@@ -88,7 +113,7 @@ server.registerTool(
         'Content-Type': 'application/json',
         Authorization: `Bearer ${API_KEY}`,
       },
-      body: JSON.stringify({ markdown }),
+      body: JSON.stringify(schema ? { schema } : { markdown }),
     })
 
     const payload = (await response.json().catch(() => null)) as
