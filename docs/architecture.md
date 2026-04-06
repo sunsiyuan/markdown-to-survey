@@ -1,6 +1,6 @@
 # Architecture
 
-MTS is the survey infrastructure layer for AI agents. The product contract is defined first in [POSITIONING.md](./POSITIONING.md): semantic question types, API-first access, and an explicit survey lifecycle drive every implementation decision below.
+MTS is the survey infrastructure layer for AI agents. The system is intentionally narrow: agents create surveys, humans answer them, and agents retrieve structured results.
 
 ## System Overview
 
@@ -10,14 +10,12 @@ MTS is the survey infrastructure layer for AI agents. The product contract is de
 │ or app code  │      │  (local process)  │      │                     │
 └──────────────┘      └───────────────────┘      │  ┌─── API Routes    │
                                                   │  ├─── Survey Page   │
-                                                  │  ├─── Docs / llms   │
-                                                  │  └─── Results UI    │
+                                                  │  └─── Docs / llms   │
                                                   └────────┬────────────┘
                                                            │
                                                     ┌──────▼──────┐
-                                                    │  Supabase   │
+                                                    │    Neon     │
                                                     │  Postgres   │
-                                                    │  + Realtime │
                                                     └─────────────┘
 ```
 
@@ -30,7 +28,7 @@ The flow is intentionally small:
 
 ## Architecture Principles
 
-- Semantic over visual: the protocol exposes 4 question types only: `single_choice`, `multi_choice`, `text`, `matrix`, and `scale` as the numeric range type once v0.2 lands. UI variants do not become protocol types.
+- Semantic over visual: the protocol exposes 5 schema variants but only 4 semantic classes: `single_choice`, `multi_choice`, `text`, `matrix`, `scale`. UI variants do not become protocol types.
 - API first: anything available in the web UI must also exist as an authenticated API or MCP operation.
 - Structured outputs: results are returned as machine-usable JSON with per-question aggregation, not only presentation text.
 - Explicit lifecycle: surveys can be open, closed, expired, or full. Submission logic and rendering both enforce the same lifecycle rules.
@@ -70,7 +68,7 @@ Supported semantic question types:
 
 ### 2. Web App (`apps/web`)
 
-The Next.js app serves both the machine-facing API and the human-facing form/results experience.
+The Next.js app serves both the machine-facing API and the human-facing survey form.
 
 API responsibilities:
 
@@ -87,7 +85,8 @@ Page responsibilities:
 
 - `/s/[id]` renders the survey form, enforces closed/expired/full state, and submits responses
 - `/docs`, `/llms.txt`, and `/api/openapi.json` make the product discoverable to developers and agents
-- `/r/[id]` remains as a legacy compatibility surface during deprecation, but results access is defined by the authenticated API
+
+There is intentionally no browser results dashboard. Results access is defined by the authenticated API and MCP tools.
 
 ### 3. MCP Server (`packages/mcp-server`)
 
@@ -109,7 +108,7 @@ Core tools:
 
 ## Access Model
 
-Results access is no longer based on a second opaque URL. The access model is:
+Results access is based on API key auth, not a second public URL. The access model is:
 
 - Respondents use the public survey URL: `/s/{survey_id}`
 - Creators use API key auth for creation, listing, lifecycle changes, and results retrieval
@@ -154,7 +153,6 @@ Notes:
 - `schema` stores the canonical survey definition used by the form renderer and results aggregation.
 - `response_count` is denormalized and maintained server-side for quick lifecycle checks.
 - Lifecycle fields live on the survey itself so both API and UI can make the same availability decision.
-- Existing legacy columns can remain temporarily during migration, but they are not part of the long-term access model.
 
 ## Survey Schema Shape
 
@@ -215,17 +213,7 @@ Aggregation is computed once on the server so every consumer sees the same stati
 - text questions expose recent responses
 - matrix questions expose row and option breakdowns
 
-The results dashboard should consume this aggregated shape directly instead of reimplementing statistics client-side.
-
-## Realtime
-
-Supabase Realtime is used for the results dashboard only as a freshness mechanism:
-
-- subscribe to `responses` inserts for a single `survey_id`
-- merge the new raw response into local state
-- refresh or update the displayed aggregates from the canonical API shape
-
-Realtime is a UI enhancement, not the source of truth. The API response remains authoritative.
+This aggregated shape is intended for agents and API clients first, not a browser analytics UI.
 
 ## Security Model
 
@@ -239,8 +227,6 @@ Realtime is a UI enhancement, not the source of truth. The API response remains 
 
 The current architecture deliberately leaves room for:
 
-- JSON schema input as a parser bypass for agents
-- lifecycle management and ownership-aware survey listing
-- conditional logic through `showIf`
 - OpenAPI publication and generated SDKs
 - future webhooks without changing the survey schema contract
+- additional SDKs layered on the same HTTP contract

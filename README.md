@@ -1,28 +1,58 @@
 # Markdown to Survey (MTS)
 
-Convert Markdown or JSON survey definitions into interactive web surveys for AI agents.
+The survey layer for AI agents.
+
+MTS lets an agent ask humans for structured input:
+
+```text
+Agent needs input
+  → writes survey in Markdown or JSON schema
+  → calls MTS
+  → gets a shareable survey URL
+  → humans respond
+  → agent retrieves structured JSON results
+```
 
 ## What is this?
 
-Write your survey in Markdown. We turn it into a live, interactive survey with a shareable link and a real-time results dashboard. Designed to work seamlessly with AI coding assistants like Claude Code.
+MTS is a minimal API and MCP server for one narrow job: ask humans questions and get machine-usable answers back.
 
-**Example flow:**
-```
-You (in Claude Code): "Create a survey from this markdown file"
-Claude Code:          Calls MTS → returns a survey URL and survey ID
-  → Survey:  https://mts.vercel.app/s/abc123
-  → Results: GET /api/surveys/abc123/responses with your API key
-```
+It is designed for:
+- AI agents that need human input mid-workflow
+- Developers building agent products that need a lightweight survey primitive
+
+It is not designed for:
+- survey dashboards
+- visual form builders
+- template libraries
+- email campaigns
+- analytics/reporting UI
 
 ## Features
 
-- **Markdown-native** — Write surveys in the format you already know
-- **One-command publish** — MCP server integration for Claude Code
-- **Beautiful UX** — Clean, mobile-first survey experience
-- **Live results** — Real-time response dashboard with charts
-- **API key auth** — Creator operations are authenticated, respondent submission stays public
+- **Markdown or JSON schema input** — fast for humans, precise for agents
+- **MCP server** — create surveys and read results directly from Claude Code
+- **Minimal API surface** — authenticated creator routes, public respondent submission
+- **Four semantic question types** — `choice`, `text`, `scale`, `matrix`
+- **Conditional logic** — `showIf` in Markdown and JSON schema
+- **Explicit lifecycle** — close surveys, expiry, and max response limits
 
-## Supported Markdown Syntax
+## Product Principles
+
+- **Semantic over visual**: MTS has a small protocol, not a zoo of UI-specific field types.
+- **AI-first I/O**: agents write the survey and agents consume the results; humans are in the middle.
+- **Everything is an API**: creator functionality must be available over authenticated HTTP and MCP.
+- **Narrow scope wins**: if a feature mainly serves human survey operators, it probably does not belong here.
+
+## Supported Question Types
+
+- `single_choice`
+- `multi_choice`
+- `text`
+- `scale`
+- `matrix`
+
+## Markdown Syntax
 
 ```markdown
 # Survey Title
@@ -53,9 +83,32 @@ Claude Code:          Calls MTS → returns a survey URL and survey ID
 | 2 | Item B | ☐Good ☐OK ☐Bad |
 ```
 
+Scale questions:
+
+```markdown
+**Q4. How severe is this issue?**
+
+[scale 1-5 min-label="Low" max-label="Critical"]
+```
+
+Conditional logic:
+
+```markdown
+**Q1. Did the deploy fail?**
+
+- ☐ Yes
+- ☐ No
+
+**Q2. Which step failed?**
+
+> show if: Q1 = "Yes"
+
+> _______________________________________________
+```
+
 ## Quick Start
 
-### Use with Claude Code (MCP Server)
+### Use with Claude Code
 
 Add to your Claude Code config (`~/.claude.json`):
 
@@ -78,7 +131,13 @@ Then in Claude Code:
 > Create a survey from docs/my-survey.md
 ```
 
-### Use the API directly
+Available tools:
+- `create_survey`
+- `get_results`
+- `list_surveys`
+- `close_survey`
+
+### Use the HTTP API
 
 ```bash
 curl -X POST https://mts.vercel.app/api/keys \
@@ -98,19 +157,32 @@ curl -X POST https://mts.vercel.app/api/surveys \
 Response:
 ```json
 {
-  "survey_url": "https://mts.vercel.app/s/abc123",
+  "survey_url": "/s/abc123",
   "question_count": 1
 }
 ```
+
+Read results:
+
+```bash
+curl https://mts.vercel.app/api/surveys/abc123/responses \
+  -H "Authorization: Bearer mts_sk_..."
+```
+
+## Public Surface
+
+- Docs page: `https://mts.vercel.app/docs`
+- OpenAPI: `https://mts.vercel.app/api/openapi.json`
+- AI index: `https://mts.vercel.app/llms.txt`
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|-----------|
 | Framework | Next.js (App Router) |
-| Database | Supabase (Postgres + Realtime) |
+| Database | Neon (serverless Postgres) |
 | Parser | remark (unified ecosystem) |
-| Frontend | React + Tailwind CSS + Recharts |
+| Frontend | React + Tailwind CSS |
 | MCP Server | @modelcontextprotocol/sdk |
 | Deployment | Vercel |
 
@@ -123,12 +195,16 @@ Response:
 └── docs/              # Architecture docs
 ```
 
+## Contributing
+
+Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a PR. The most important rule is scope discipline: new UI variants, analytics dashboards, and human-operator features are usually out of scope.
+
 ## Development
 
 ```bash
 pnpm install
 pnpm dev              # Start Next.js dev server
-pnpm test             # Run parser tests
+pnpm --filter @mts/parser test
 pnpm build            # Build all packages
 ```
 
