@@ -34,6 +34,14 @@ type ResponseRecord = {
   created_at: string
 }
 
+type SurveyListItem = {
+  id: string
+  title: string
+  status?: string
+  response_count?: number
+  created_at?: string
+}
+
 type ResultsQuestion =
   | {
       id: string
@@ -75,6 +83,7 @@ type ResultsQuestion =
     }
 
 const API_BASE_URL = process.env.MTS_API_URL ?? 'https://mts.vercel.app'
+const API_KEY = process.env.MTS_API_KEY
 
 const server = new McpServer({
   name: 'markdown-to-survey',
@@ -92,9 +101,17 @@ server.registerTool(
     },
   },
   async ({ markdown }) => {
+    const apiKeyError = requireApiKey()
+    if (apiKeyError) {
+      return apiKeyError
+    }
+
     const response = await fetch(`${API_BASE_URL}/api/surveys`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${API_KEY}`,
+      },
       body: JSON.stringify({ markdown }),
     })
 
@@ -140,6 +157,11 @@ server.registerTool(
     },
   },
   async ({ result_id: resultId }) => {
+    const apiKeyError = requireApiKey()
+    if (apiKeyError) {
+      return apiKeyError
+    }
+
     const surveyResponse = await fetch(
       `${API_BASE_URL}/api/surveys/by-result/${encodeURIComponent(resultId)}`,
     )
@@ -168,6 +190,11 @@ server.registerTool(
 
     const responsesResponse = await fetch(
       `${API_BASE_URL}/api/surveys/${encodeURIComponent(surveyPayload.survey_id)}/responses`,
+      {
+        headers: {
+          Authorization: `Bearer ${API_KEY}`,
+        },
+      },
     )
     const responsesPayload = (await responsesResponse.json().catch(() => null)) as
       | {
@@ -207,7 +234,95 @@ server.registerTool(
   },
 )
 
+server.registerTool(
+  'list_surveys',
+  {
+    title: 'List Surveys',
+    description: 'List all surveys created with the current API key.',
+    inputSchema: {},
+  },
+  async () => {
+    const apiKeyError = requireApiKey()
+    if (apiKeyError) {
+      return apiKeyError
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/surveys`, {
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+      },
+    })
+    const payload = (await response.json().catch(() => null)) as
+      | SurveyListItem[]
+      | { error?: string }
+      | null
+
+    if (!response.ok || !Array.isArray(payload)) {
+      const error = payload && !Array.isArray(payload) ? payload.error : response.statusText
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Failed to list surveys: ${error ?? response.statusText}`,
+          },
+        ],
+        isError: true,
+      }
+    }
+
+    if (payload.length === 0) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: 'No surveys found for this API key.',
+          },
+        ],
+      }
+    }
+
+    const lines = ['ID          Title                    Status   Responses  Created']
+
+    payload.forEach((survey) => {
+      lines.push(
+        [
+          survey.id.padEnd(10),
+          truncate(survey.title, 24).padEnd(24),
+          (survey.status ?? 'open').padEnd(8),
+          String(survey.response_count ?? 0).padEnd(10),
+          (survey.created_at ?? '').slice(0, 10),
+        ].join('  '),
+      )
+    })
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: lines.join('\n'),
+        },
+      ],
+    }
+  },
+)
+
 await server.connect(new StdioServerTransport())
+
+function requireApiKey() {
+  if (API_KEY) {
+    return null
+  }
+
+  return {
+    content: [
+      {
+        type: 'text' as const,
+        text: 'Error: MTS_API_KEY environment variable is not set.\nGet an API key at https://mts.vercel.app or via: POST /api/keys',
+      },
+    ],
+    isError: true,
+  }
+}
 
 function extractSurveyId(surveyUrl: string) {
   const trimmed = surveyUrl.replace(/\/+$/, '')
@@ -299,4 +414,12 @@ function scaleBlock(count: number, maxCount: number) {
   const blocks = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█']
   const index = Math.max(1, Math.ceil((count / maxCount) * (blocks.length - 1)))
   return blocks[index] ?? '█'
+}
+
+function truncate(value: string, length: number) {
+  if (value.length <= length) {
+    return value
+  }
+
+  return `${value.slice(0, length - 1)}…`
 }

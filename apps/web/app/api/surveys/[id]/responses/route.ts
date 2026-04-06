@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 
 import type { Survey } from '@mts/parser'
 
+import { requireAuth } from '@/lib/auth'
 import { aggregateSurveyResults } from '@/lib/results'
 import { supabase } from '@/lib/supabase'
 
@@ -36,10 +37,15 @@ export async function POST(request: Request, context: RouteContext) {
 }
 
 export async function GET(_request: Request, context: RouteContext) {
+  const auth = await requireAuth(_request)
+  if (auth instanceof Response) {
+    return auth
+  }
+
   const { id: surveyId } = await context.params
   const { data: surveyRow, error: surveyError } = await supabase
     .from('surveys')
-    .select('schema')
+    .select('api_key_id, schema')
     .eq('id', surveyId)
     .maybeSingle()
 
@@ -49,6 +55,10 @@ export async function GET(_request: Request, context: RouteContext) {
 
   if (!surveyRow) {
     return NextResponse.json({ error: 'Survey not found' }, { status: 404 })
+  }
+
+  if (surveyRow.api_key_id !== auth.keyId) {
+    return NextResponse.json({ error: 'You do not have access to this survey' }, { status: 403 })
   }
 
   const { data, error } = await supabase
