@@ -1,4 +1,5 @@
 import type {
+  Condition,
   MatrixColumn,
   MatrixRow,
   Option,
@@ -30,24 +31,25 @@ export class SurveyInputValidationError extends Error {
 }
 
 export function buildSurveyFromInput(input: SurveyInput): Survey {
-  const errors = validateSurveyInput(input)
-
-  if (errors.length > 0) {
-    throw new SurveyInputValidationError(errors)
-  }
-
   let questionIndex = 0
-
-  return {
+  const survey = {
     title: input.title.trim(),
     description: normalizeOptionalString(input.description),
     sections: (input.sections ?? []).map((section, sectionIndex) =>
       buildSection(section, sectionIndex, () => questionIndex++),
     ),
   }
+
+  const errors = validateSurveyInput(input, survey)
+
+  if (errors.length > 0) {
+    throw new SurveyInputValidationError(errors)
+  }
+
+  return survey
 }
 
-function validateSurveyInput(input: SurveyInput) {
+function validateSurveyInput(input: SurveyInput, survey: Survey) {
   const errors: string[] = []
 
   if (!input.title?.trim()) {
@@ -102,6 +104,8 @@ function validateSurveyInput(input: SurveyInput) {
           errors.push(`${path}: scale range cannot exceed 11 points`)
         }
       }
+
+      validateShowIf(errors, survey, question.showIf, path)
     })
   })
 
@@ -130,6 +134,7 @@ function buildQuestion(question: QuestionInput, questionIndex: number): Question
     label: question.label.trim(),
     description: normalizeOptionalString(question.description),
     required: question.required ?? false,
+    showIf: question.showIf,
   }
 
   if (question.type === 'single_choice' || question.type === 'multi_choice') {
@@ -191,4 +196,45 @@ function buildMatrixRows(rows: QuestionInput['rows'], columns: MatrixColumn[]): 
 function normalizeOptionalString(value?: string) {
   const trimmed = value?.trim()
   return trimmed ? trimmed : undefined
+}
+
+function validateShowIf(
+  errors: string[],
+  survey: Survey,
+  showIf: Condition | undefined,
+  path: string,
+) {
+  if (!showIf) {
+    return
+  }
+
+  const questions = survey.sections.flatMap((section) => section.questions)
+  const currentQuestion = questions.find((question) => question.showIf === showIf)
+  const referencedIndex = questions.findIndex((question) => question.id === showIf.questionId)
+  const currentIndex = questions.findIndex((question) => question.id === currentQuestion?.id)
+
+  if (referencedIndex === -1) {
+    errors.push(`${path}.showIf.questionId must reference an existing question`)
+    return
+  }
+
+  if (currentIndex !== -1 && referencedIndex >= currentIndex) {
+    errors.push(`${path}.showIf.questionId must reference an earlier question`)
+  }
+
+  if (
+    (showIf.operator === 'eq' ||
+      showIf.operator === 'neq' ||
+      showIf.operator === 'contains') &&
+    !showIf.value
+  ) {
+    errors.push(`${path}.showIf.value is required for operator '${showIf.operator}'`)
+  }
+
+  if (
+    showIf.operator === 'contains' &&
+    questions[referencedIndex]?.type !== 'multi_choice'
+  ) {
+    errors.push(`${path}.showIf.contains requires a multi_choice source question`)
+  }
 }

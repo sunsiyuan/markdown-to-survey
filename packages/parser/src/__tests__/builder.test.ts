@@ -153,4 +153,58 @@ describe('buildSurveyFromInput', () => {
       }),
     ).toThrowError(SurveyInputValidationError)
   })
+
+  it('accepts validated showIf conditions in JSON schema input', () => {
+    const survey = buildSurveyFromInput({
+      title: 'Conditional Survey',
+      sections: [
+        {
+          questions: [
+            {
+              type: 'single_choice',
+              label: 'Have you used it before?',
+              options: [{ label: 'Yes' }, { label: 'No' }],
+            },
+            {
+              type: 'text',
+              label: 'What stopped you?',
+              showIf: {
+                questionId: 'q_0',
+                operator: 'eq',
+                value: 'No',
+              },
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(survey.sections[0].questions[1].showIf).toMatchObject({
+      questionId: 'q_0',
+      operator: 'eq',
+      value: 'No',
+    })
+  })
+
+  it('rejects invalid showIf references', () => {
+    expect(() =>
+      buildSurveyFromInput({
+        title: 'Broken Conditional Survey',
+        sections: [
+          {
+            questions: [
+              {
+                type: 'text',
+                label: 'Hidden question',
+                showIf: {
+                  questionId: 'q_99',
+                  operator: 'answered',
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrowError(SurveyInputValidationError)
+  })
 })

@@ -23,6 +23,14 @@ export interface SectionInput {
   questions: QuestionInput[]
 }
 
+export type ConditionOperator = 'eq' | 'neq' | 'contains' | 'answered'
+
+export interface Condition {
+  questionId: string
+  operator: ConditionOperator
+  value?: string
+}
+
 export type QuestionType =
   | 'single_choice'
   | 'multi_choice'
@@ -36,6 +44,7 @@ export interface Question {
   label: string
   description?: string
   required: boolean
+  showIf?: Condition
   options?: Option[]
   rows?: MatrixRow[]
   columns?: MatrixColumn[]
@@ -50,6 +59,7 @@ export interface QuestionInput {
   label: string
   description?: string
   required?: boolean
+  showIf?: Condition
   options?: OptionInput[]
   rows?: MatrixRowInput[]
   columns?: MatrixColumnInput[]

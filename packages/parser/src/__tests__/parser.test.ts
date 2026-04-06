@@ -142,4 +142,50 @@ describe('parseSurvey', () => {
       { type: 'scale', min: 1, max: 5 },
     ])
   })
+
+  it('parses showIf blockquotes and resolves question references', () => {
+    const survey = parseSurvey(`# Conditional Survey
+
+**Q1. Have you used our product before?**
+
+- ☐ Yes
+- ☐ No
+
+**Q2. How satisfied are you with it?**
+
+> show if: Q1 = "Yes"
+
+[scale 1-5]`)
+
+    expect(survey.sections[0].questions[1]).toMatchObject({
+      type: 'scale',
+      showIf: {
+        questionId: 'q_0',
+        operator: 'eq',
+        value: 'Yes',
+      },
+    })
+  })
+
+  it('does not store condition blockquotes as question descriptions', () => {
+    const survey = parseSurvey(`# Conditional Survey
+
+**Q1. Have you used our product before?**
+
+- ☐ Yes
+- ☐ No
+
+**Q2. Why not?**
+
+> show if: Q1 = "No"
+
+> _______________`)
+
+    expect(survey.sections[0].questions[1].description).toBeUndefined()
+    expect(survey.sections[0].questions[1].showIf).toMatchObject({
+      questionId: 'q_0',
+      operator: 'eq',
+      value: 'No',
+    })
+  })
 })
