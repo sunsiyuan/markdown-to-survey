@@ -20,7 +20,6 @@ const sampleMarkdown = `# Product Feedback Survey
 
 type CreateSurveyResult = {
   survey_url: string
-  results_url: string
   question_count: number
 }
 
@@ -179,7 +178,7 @@ export default function Home() {
                 </div>
                 <p className="max-w-md text-sm leading-6 text-slate-300">
                   This form calls <code className="rounded bg-white/10 px-1.5 py-0.5">POST /api/surveys</code>{' '}
-                  and returns the respondent and results URLs.
+                  and returns the respondent URL and question count.
                 </p>
               </div>
 
@@ -221,11 +220,11 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-[0.18em] text-emerald-200">
-                      Results URL
+                      Survey ID
                     </p>
-                    <a className="mt-2 block break-all font-medium underline" href={result.results_url}>
-                      {result.results_url}
-                    </a>
+                    <p className="mt-2 break-all text-xl font-semibold">
+                      {result.survey_url.split('/').at(-1)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-[0.18em] text-emerald-200">

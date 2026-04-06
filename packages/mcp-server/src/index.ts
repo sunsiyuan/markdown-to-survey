@@ -59,13 +59,12 @@ server.registerTool(
     const payload = (await response.json().catch(() => null)) as
       | {
           survey_url?: string
-          results_url?: string
           question_count?: number
           error?: string
         }
       | null
 
-    if (!response.ok || !payload?.survey_url || !payload.results_url) {
+    if (!response.ok || !payload?.survey_url) {
       return {
         content: [
           {
@@ -81,7 +80,7 @@ server.registerTool(
       content: [
         {
           type: 'text',
-          text: `Survey created successfully!\n\nSurvey URL (share with respondents): ${payload.survey_url}\nResults URL (view responses): ${payload.results_url}\n\nQuestions: ${payload.question_count ?? 0}`,
+          text: `Survey created successfully!\n\nSurvey URL (share with respondents): ${payload.survey_url}\nSurvey ID (for get_results): ${extractSurveyId(payload.survey_url)}\n\nQuestions: ${payload.question_count ?? 0}`,
         },
       ],
     }
@@ -167,6 +166,12 @@ server.registerTool(
 )
 
 await server.connect(new StdioServerTransport())
+
+function extractSurveyId(surveyUrl: string) {
+  const trimmed = surveyUrl.replace(/\/+$/, '')
+  const segments = trimmed.split('/')
+  return segments[segments.length - 1] ?? surveyUrl
+}
 
 function formatResultsSummary(
   title: string,

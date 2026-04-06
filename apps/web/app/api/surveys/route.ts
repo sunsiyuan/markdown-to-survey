@@ -26,12 +26,11 @@ export async function POST(request: Request) {
   }
 
   const id = nanoid(12)
-  const resultId = nanoid(12)
   const questionCount = countQuestions(survey)
 
   const { error } = await supabase.from('surveys').insert({
     id,
-    result_id: resultId,
+    result_id: null,
     title: survey.title,
     description: survey.description ?? null,
     schema: survey,
@@ -46,7 +45,6 @@ export async function POST(request: Request) {
   return NextResponse.json(
     {
       survey_url: `/s/${id}`,
-      results_url: `/r/${resultId}`,
       question_count: questionCount,
     },
     { status: 201 },
