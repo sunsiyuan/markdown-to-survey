@@ -16,7 +16,6 @@ export type QuestionType =
   | 'multi_choice'
   | 'text'
   | 'matrix'
-  | 'composite'
 
 export interface Question {
   id: string
@@ -27,7 +26,6 @@ export interface Question {
   options?: Option[]
   rows?: MatrixRow[]
   columns?: MatrixColumn[]
-  subQuestions?: Question[]
 }
 
 export interface Option {

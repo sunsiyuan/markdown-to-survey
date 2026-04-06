@@ -13,7 +13,7 @@ type Survey = {
       questions: Array<{
         id: string
         label: string
-        type: 'single_choice' | 'multi_choice' | 'text' | 'matrix' | 'composite'
+        type: 'single_choice' | 'multi_choice' | 'text' | 'matrix'
         options?: Array<{ id: string; label: string }>
         rows?: Array<{ id: string; label: string }>
         columns?: Array<{

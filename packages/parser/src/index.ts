@@ -309,7 +309,6 @@ function setChoiceQuestion(question: Question, options: Option[]) {
   }))
   delete question.rows
   delete question.columns
-  delete question.subQuestions
 }
 
 function setMatrixQuestion(question: Question, rawTable: string) {
@@ -379,7 +378,6 @@ function setMatrixQuestion(question: Question, rawTable: string) {
   question.rows = matrixRows
   question.columns = columns
   delete question.options
-  delete question.subQuestions
 }
 
 function parseCheckboxOptions(input: string): Option[] {

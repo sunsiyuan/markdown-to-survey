@@ -32,6 +32,13 @@ describe('parseSurvey', () => {
     expect(sectionC.title).toBe('C. Preferences')
   })
 
+  it('splits composite-looking intro fields into sequential text questions', () => {
+    expect(introSection.questions.slice(0, 2)).toMatchObject([
+      { label: 'Date:', type: 'text' },
+      { label: 'Name:', type: 'text' },
+    ])
+  })
+
   it('parses question A2 as single choice with 4 options', () => {
     const question = sectionA.questions.find((item) => item.label.startsWith('A2.'))
 

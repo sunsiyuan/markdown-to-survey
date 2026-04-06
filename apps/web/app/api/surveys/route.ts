@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid'
 import { NextResponse } from 'next/server'
 
-import { parseSurvey, type Question, type Survey } from '@mts/parser'
+import { parseSurvey, type Survey } from '@mts/parser'
 
 import { supabase } from '@/lib/supabase'
 
@@ -55,26 +55,7 @@ export async function POST(request: Request) {
 
 function countQuestions(survey: Survey) {
   return survey.sections.reduce(
-    (total, section) =>
-      total +
-      section.questions.reduce(
-        (sectionTotal, question) => sectionTotal + countQuestion(question),
-        0,
-      ),
+    (total, section) => total + section.questions.length,
     0,
-  )
-}
-
-function countQuestion(question: Question): number {
-  if (!question.subQuestions?.length) {
-    return 1
-  }
-
-  return (
-    1 +
-    question.subQuestions.reduce(
-      (total, subQuestion) => total + countQuestion(subQuestion),
-      0,
-    )
   )
 }
