@@ -1,0 +1,21 @@
+name: Daily Metrics
+
+on:
+  schedule:
+    - cron: '3 9 * * *'  # 9:03 UTC daily
+  workflow_dispatch: {}
+
+jobs:
+  metrics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run metrics
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: ./scripts/metrics.sh
+
+      - name: Post to summary
+        if: always()
+        run: echo "Metrics logged in job output above."
