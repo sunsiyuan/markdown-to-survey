@@ -6,17 +6,26 @@ import type { SurveyInput } from '@/lib/survey'
 
 const STORAGE_KEY = 'mts_demo_api_key'
 
-const defaultMarkdown = `# User Interview Intake
+const defaultMarkdown = `# Product Feedback
 
-Collect the missing details before the agent continues.
+Quick check-in before we plan the next sprint.
 
-## Context
+## Usage
 
-Which environment are you using? Choose one: Local, Staging, Production.
+How long have you been using the product?
+Choose one: Less than a week, 1–4 weeks, 1–3 months, 3+ months.
 
-How urgent is this issue? Rate from 1 (Low) to 5 (Critical).
+Which features have you tried? Choose all that apply: REST API, MCP server, Web demo, Docs.
 
-What have you tried already? Open text.`
+## Satisfaction
+
+Overall satisfaction. Rate from 1 (Very disappointed) to 5 (Love it).
+
+How likely are you to recommend us to a colleague? Rate from 0 (Not at all) to 10 (Definitely).
+
+## Open Feedback
+
+What's the one thing you'd most want us to improve? Open text.`
 
 type Step = 'idle' | 'parsing' | 'creating' | 'done' | 'rate_limited' | 'error'
 
