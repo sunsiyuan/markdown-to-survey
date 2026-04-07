@@ -93,7 +93,8 @@ export async function POST(request: Request) {
         status,
         max_responses,
         expires_at,
-        webhook_url
+        webhook_url,
+        source
       )
       VALUES (
         ${id},
@@ -105,7 +106,8 @@ export async function POST(request: Request) {
         'open',
         ${maxResponses ?? null},
         ${expiresAt ?? null}::timestamptz,
-        ${webhookUrl}
+        ${webhookUrl},
+        ${request.headers.get('X-Source') === 'demo' ? 'demo' : 'api'}
       )
     `
   } catch (error) {

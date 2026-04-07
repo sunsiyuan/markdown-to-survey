@@ -23,16 +23,18 @@ fi
 echo "--- Totals ---"
 psql "$DB_URL" -t -c "
   SELECT 'API keys:   ' || count(*) FROM api_keys
-  UNION ALL SELECT 'Surveys:    ' || count(*) FROM surveys
-  UNION ALL SELECT 'Responses:  ' || count(*) FROM responses;
+  UNION ALL SELECT 'Surveys:    ' || count(*) FROM surveys WHERE source = 'api'
+  UNION ALL SELECT 'Responses:  ' || count(*) FROM responses r JOIN surveys s ON s.id = r.survey_id WHERE s.source = 'api'
+  UNION ALL SELECT 'Demo:       ' || count(*) FROM surveys WHERE source = 'demo';
 "
 
 echo ""
 echo "--- This week ---"
 psql "$DB_URL" -t -c "
   SELECT 'New keys:      ' || count(*) FROM api_keys WHERE created_at > now() - interval '7 days'
-  UNION ALL SELECT 'New surveys:   ' || count(*) FROM surveys WHERE created_at > now() - interval '7 days'
-  UNION ALL SELECT 'New responses: ' || count(*) FROM responses WHERE created_at > now() - interval '7 days';
+  UNION ALL SELECT 'New surveys:   ' || count(*) FROM surveys WHERE source = 'api' AND created_at > now() - interval '7 days'
+  UNION ALL SELECT 'New responses: ' || count(*) FROM responses r JOIN surveys s ON s.id = r.survey_id WHERE s.source = 'api' AND r.created_at > now() - interval '7 days'
+  UNION ALL SELECT 'New demo:      ' || count(*) FROM surveys WHERE source = 'demo' AND created_at > now() - interval '7 days';
 "
 
 echo ""

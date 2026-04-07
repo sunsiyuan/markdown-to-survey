@@ -133,6 +133,7 @@ export function TryItPanel() {
         headers: {
           Authorization: `Bearer ${trimmedKey}`,
           'Content-Type': 'application/json',
+          'X-Source': 'demo',
         },
         body: JSON.stringify({ schema: parsedSchema }),
       })
