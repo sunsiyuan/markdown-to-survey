@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { name?: string } | null
   const name = body?.name?.trim() || null
   const id = nanoid(12)
-  const key = `mts_sk_${nanoid(32)}`
+  const key = `hs_sk_${nanoid(32)}`
   const keyHash = hashApiKey(key)
 
   try {

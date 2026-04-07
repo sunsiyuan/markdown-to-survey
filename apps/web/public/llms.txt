@@ -17,7 +17,7 @@ An agent working on a long-horizon task sends a JSON schema to the HumanSurvey A
 ## Typical agent workflow
 
 ```
-1. POST /api/keys                         → save mts_sk_... key (one-time setup)
+1. POST /api/keys                         → save hs_sk_... key (one-time setup)
 2. POST /api/surveys  { schema: {...} }   → get /s/{id} URL + survey_id
 3. share /s/{id} with the target group (email, Slack, etc.)
 4. GET  /api/surveys/{id}/responses       → check results; repeat over hours or days
@@ -35,7 +35,7 @@ Add to `~/.claude.json`:
     "survey": {
       "command": "npx",
       "args": ["-y", "humansurvey-mcp"],
-      "env": { "MTS_API_KEY": "mts_sk_your_key_here" }
+      "env": { "HUMANSURVEY_API_KEY": "hs_sk_your_key_here" }
     }
   }
 }
@@ -51,14 +51,14 @@ Get an API key (no auth needed):
 curl -X POST https://www.humansurvey.co/api/keys \
   -H "Content-Type: application/json" \
   -d '{"name":"my-agent"}'
-# → { "key": "mts_sk_..." }  ← save this
+# → { "key": "hs_sk_..." }  ← save this
 ```
 
 Create a survey:
 
 ```bash
 curl -X POST https://www.humansurvey.co/api/surveys \
-  -H "Authorization: Bearer mts_sk_..." \
+  -H "Authorization: Bearer hs_sk_..." \
   -H "Content-Type: application/json" \
   -d '{
     "schema": {

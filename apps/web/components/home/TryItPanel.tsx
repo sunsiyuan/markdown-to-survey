@@ -195,10 +195,10 @@ export function TryItPanel() {
               <div className="mt-2 flex gap-2">
                 <input
                   type="text"
-                  placeholder="mts_sk_... (paste existing)"
+                  placeholder="hs_sk_... (paste existing)"
                   className="h-9 flex-1 rounded-lg border border-black/10 bg-white px-3 font-mono text-xs text-slate-900 outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
                   onChange={(e) => {
-                    if (e.target.value.startsWith('mts_sk_')) {
+                    if (e.target.value.startsWith('hs_sk_')) {
                       persistKey(e.target.value)
                     }
                   }}

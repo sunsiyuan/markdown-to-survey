@@ -119,7 +119,7 @@ Add to your Claude Code config (`~/.claude.json`):
       "command": "npx",
       "args": ["-y", "humansurvey-mcp"],
       "env": {
-        "MTS_API_KEY": "mts_sk_your_key_here"
+        "HUMANSURVEY_API_KEY": "hs_sk_your_key_here"
       }
     }
   }
@@ -149,7 +149,7 @@ Then create a survey:
 
 ```bash
 curl -X POST https://www.humansurvey.co/api/surveys \
-  -H "Authorization: Bearer mts_sk_..." \
+  -H "Authorization: Bearer hs_sk_..." \
   -H "Content-Type: application/json" \
   -d '{
     "schema": {
@@ -176,7 +176,7 @@ Read results:
 
 ```bash
 curl https://www.humansurvey.co/api/surveys/abc123/responses \
-  -H "Authorization: Bearer mts_sk_..."
+  -H "Authorization: Bearer hs_sk_..."
 ```
 
 ## Public Surface

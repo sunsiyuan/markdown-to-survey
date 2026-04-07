@@ -90,7 +90,7 @@ const schemaSnippet = `{
 }`
 
 const createSurveySnippet = `curl -X POST https://www.humansurvey.co/api/surveys \\
-  -H "Authorization: Bearer mts_sk_..." \\
+  -H "Authorization: Bearer hs_sk_..." \\
   -H "Content-Type: application/json" \\
   -d '{
     "schema": {
@@ -117,10 +117,10 @@ const createSurveySnippet = `curl -X POST https://www.humansurvey.co/api/surveys
   }'`
 
 const getResultsSnippet = `curl https://www.humansurvey.co/api/surveys/svy_123/responses \\
-  -H "Authorization: Bearer mts_sk_..." `
+  -H "Authorization: Bearer hs_sk_..." `
 
 const patchSurveySnippet = `curl -X PATCH https://www.humansurvey.co/api/surveys/svy_123 \\
-  -H "Authorization: Bearer mts_sk_..." \\
+  -H "Authorization: Bearer hs_sk_..." \\
   -H "Content-Type: application/json" \\
   -d '{"status":"closed"}'`
 
@@ -129,7 +129,7 @@ const mcpConfigSnippet = `{
     "survey": {
       "command": "npx",
       "args": ["-y", "humansurvey-mcp"],
-      "env": { "MTS_API_KEY": "mts_sk_your_key_here" }
+      "env": { "HUMANSURVEY_API_KEY": "hs_sk_your_key_here" }
     }
   }
 }`
@@ -267,13 +267,13 @@ export default function DocsPage() {
           <div className="space-y-8">
             <Section id="authentication" title="Authentication">
               <p>
-                Creator routes use bearer authentication with keys shaped like <code>mts_sk_...</code>.
+                Creator routes use bearer authentication with keys shaped like <code>hs_sk_...</code>.
                 The raw key is only returned once when you call <code>POST /api/keys</code>.
               </p>
               <CodeBlock code={authSnippet} />
               <p>
                 Pass the key on authenticated requests:
-                <code className="ml-2">Authorization: Bearer mts_sk_...</code>
+                <code className="ml-2">Authorization: Bearer hs_sk_...</code>
               </p>
             </Section>
 

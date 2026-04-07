@@ -66,7 +66,7 @@ The MCP server is a thin authenticated client over the hosted API.
 Responsibilities:
 
 - Accept survey definitions from agents
-- Call the API with `Authorization: Bearer ${MTS_API_KEY}`
+- Call the API with `Authorization: Bearer ${HUMANSURVEY_API_KEY}`
 - Format creator-friendly text output for MCP tools
 - Preserve access to structured results through the underlying API response shapes
 
@@ -189,7 +189,7 @@ This aggregated shape is intended for agents and API clients first, not a browse
 ## Security Model
 
 - API keys are stored hashed, never plaintext after creation
-- Creator endpoints require `Authorization: Bearer mts_sk_...`
+- Creator endpoints require `Authorization: Bearer hs_sk_...`
 - Respondent endpoints remain public by design
 - Markdown is parsed into structured schema, not rendered as raw HTML
 - Ownership checks happen at the survey API boundary using `api_key_id`

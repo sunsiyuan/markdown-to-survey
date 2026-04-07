@@ -17,8 +17,8 @@
       },
       "environmentVariables": [
         {
-          "name": "MTS_API_KEY",
-          "description": "Your HumanSurvey API key (starts with mts_sk_). Get one at https://www.humansurvey.co",
+          "name": "HUMANSURVEY_API_KEY",
+          "description": "Your HumanSurvey API key (starts with hs_sk_). Get one at https://www.humansurvey.co",
           "isRequired": true,
           "format": "string",
           "isSecret": true

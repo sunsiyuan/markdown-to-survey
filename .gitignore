@@ -9,3 +9,5 @@ dist/
 
 # Private test fixtures — never commit real survey content
 fixtures/
+.mcpregistry_github_token
+.mcpregistry_registry_token

@@ -67,8 +67,8 @@ type ResultsQuestion =
       }
     }
 
-const API_BASE_URL = process.env.MTS_API_URL ?? 'https://www.humansurvey.co'
-const API_KEY = process.env.MTS_API_KEY
+const API_BASE_URL = process.env.HUMANSURVEY_API_URL ?? 'https://www.humansurvey.co'
+const API_KEY = process.env.HUMANSURVEY_API_KEY
 
 const server = new McpServer({
   name: 'humansurvey-mcp',
@@ -408,7 +408,7 @@ function requireApiKey() {
     content: [
       {
         type: 'text' as const,
-        text: 'Error: MTS_API_KEY environment variable is not set.\nGet an API key at https://www.humansurvey.co or via: POST /api/keys',
+        text: 'Error: HUMANSURVEY_API_KEY environment variable is not set.\nGet an API key at https://www.humansurvey.co or via: POST /api/keys',
       },
     ],
     isError: true,

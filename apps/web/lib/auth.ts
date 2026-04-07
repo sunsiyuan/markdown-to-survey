@@ -11,7 +11,7 @@ export type AuthResult = {
 export async function requireAuth(request: Request): Promise<AuthResult | Response> {
   const header = request.headers.get('Authorization')
 
-  if (!header?.startsWith('Bearer mts_sk_')) {
+  if (!header?.startsWith('Bearer hs_sk_')) {
     return NextResponse.json(
       { error: 'Missing or invalid Authorization header' },
       { status: 401 },

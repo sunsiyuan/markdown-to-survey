@@ -15,7 +15,7 @@ const openApiDocument = {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'API Key',
-        description: 'Pass your API key as a Bearer token: Authorization: Bearer mts_sk_...',
+        description: 'Pass your API key as a Bearer token: Authorization: Bearer hs_sk_...',
       },
     },
     schemas: {
@@ -62,7 +62,7 @@ const openApiDocument = {
               'application/json': {
                 example: {
                   id: 'abc123efgh45',
-                  key: 'mts_sk_A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6',
+                  key: 'hs_sk_A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6',
                   name: 'my-agent',
                   created_at: '2026-04-07T10:00:00.000Z',
                 },
