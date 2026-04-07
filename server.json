@@ -1,0 +1,11 @@
+{
+  "name": "io.github.sunsiyuan/human-survey",
+  "title": "HumanSurvey",
+  "description": "Feedback collection for AI agents. Create surveys from JSON schema, share with a group of humans, retrieve structured results via API or MCP. Designed for long-horizon agent workflows: post-event feedback, product launch surveys, team health checks.",
+  "version": "0.1.0",
+  "websiteUrl": "https://www.humansurvey.co",
+  "repository": "https://github.com/sunsiyuan/human-survey",
+  "transport": {
+    "type": "stdio"
+  }
+}

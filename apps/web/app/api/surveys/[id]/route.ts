@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/lib/auth'
 import { sql, parseJsonValue } from '@/lib/db'
+import { fireWebhook } from '@/lib/webhook'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -90,7 +91,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   try {
     const rows = (await sql`
-      SELECT id, api_key_id, status, max_responses, expires_at
+      SELECT id, api_key_id, status, max_responses, expires_at, webhook_url
       FROM surveys
       WHERE id = ${id}
       LIMIT 1
@@ -100,6 +101,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       status: string
       max_responses: number | null
       expires_at: string | null
+      webhook_url: string | null
     }>
 
     const existingSurvey = rows[0]
@@ -128,15 +130,34 @@ export async function PATCH(request: Request, context: RouteContext) {
         max_responses = ${nextMaxResponses},
         expires_at = ${nextExpiresAt}::timestamptz
       WHERE id = ${id} AND api_key_id = ${auth.keyId}
-      RETURNING id, status, max_responses, expires_at
+      RETURNING id, status, max_responses, expires_at, response_count, webhook_url
     `) as Array<{
       id: string
       status: string
       max_responses: number | null
       expires_at: string | null
+      response_count: number
+      webhook_url: string | null
     }>
 
-    return NextResponse.json(updatedRows[0])
+    const updated = updatedRows[0]
+
+    if (nextStatus === 'closed' && existingSurvey.status !== 'closed' && updated.webhook_url) {
+      fireWebhook(updated.webhook_url, {
+        survey_id: id,
+        status: 'closed',
+        closed_reason: 'manual',
+        response_count: updated.response_count,
+        closed_at: new Date().toISOString(),
+      })
+    }
+
+    return NextResponse.json({
+      id: updated.id,
+      status: updated.status,
+      max_responses: updated.max_responses,
+      expires_at: updated.expires_at,
+    })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Database error'
     return NextResponse.json({ error: message }, { status: 500 })

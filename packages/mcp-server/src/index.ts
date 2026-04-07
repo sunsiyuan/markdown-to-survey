@@ -80,40 +80,34 @@ server.registerTool(
   {
     title: 'Create Survey',
     description:
-      'Create an interactive survey from Markdown or a JSON schema object. Returns a survey URL for respondents and a survey ID for future result lookup.',
+      'Use this when an agent task involves collecting structured feedback or data from a group of people. ' +
+      'Common cases: post-event attendee feedback, product satisfaction after a launch, team health checks, customer ratings after support resolution. ' +
+      'Provide a JSON schema object describing the survey. ' +
+      'Returns a survey_url to share with respondents and a survey_id to pass to get_results later. ' +
+      'The survey accepts responses immediately and stays open until you close it or it expires.',
     inputSchema: {
-      markdown: z.string().min(1).optional(),
-      schema: z.record(z.string(), z.unknown()).optional(),
+      schema: z.record(z.string(), z.unknown()).describe(
+        'Survey as a JSON schema object: { title: string, sections: [{ questions: [{ type, label, ...}] }] }. ' +
+        'Question types: single_choice (needs options), multi_choice (needs options), text, scale (needs min/max, range ≤ 11), matrix (needs rows + columns). ' +
+        'Add showIf: { questionId, operator: "eq"|"neq"|"contains"|"answered", value } to any question for conditional logic.'
+      ),
+      max_responses: z.number().int().positive().optional().describe(
+        'Optional. Close the survey automatically after this many responses.'
+      ),
+      expires_at: z.string().optional().describe(
+        'Optional. ISO 8601 datetime — close the survey automatically at this time (e.g. "2026-04-14T00:00:00Z").'
+      ),
+      webhook_url: z.string().url().optional().describe(
+        'Optional. URL to POST to once when the survey closes. ' +
+        'Payload: { survey_id, status: "closed", closed_reason: "manual" | "max_responses", response_count, closed_at }. ' +
+        'Fires when you call close_survey or when max_responses is reached. Does not fire when expires_at elapses.'
+      ),
     },
   },
-  async ({ markdown, schema }) => {
+  async ({ schema, max_responses, expires_at, webhook_url }) => {
     const apiKeyError = requireApiKey()
     if (apiKeyError) {
       return apiKeyError
-    }
-
-    if (!markdown && !schema) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: 'Provide either markdown or schema.',
-          },
-        ],
-        isError: true,
-      }
-    }
-
-    if (markdown && schema) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: 'Provide either markdown or schema, not both.',
-          },
-        ],
-        isError: true,
-      }
     }
 
     const response = await fetch(`${API_BASE_URL}/api/surveys`, {
@@ -122,7 +116,7 @@ server.registerTool(
         'Content-Type': 'application/json',
         Authorization: `Bearer ${API_KEY}`,
       },
-      body: JSON.stringify(schema ? { schema } : { markdown }),
+      body: JSON.stringify({ schema, max_responses, expires_at, webhook_url }),
     })
 
     const payload = (await response.json().catch(() => null)) as
@@ -161,9 +155,13 @@ server.registerTool(
   {
     title: 'Get Results',
     description:
-      'Get the current results of a survey by its survey ID.',
+      'Retrieve aggregated results for a survey. ' +
+      'Shows survey status (open/closed), total response count, and per-question results: ' +
+      'choice tallies with percentages, scale mean/median/distribution, and recent text responses. ' +
+      'If the survey is still open, call again later to check for new responses — the output will tell you. ' +
+      'Use close_survey when you have enough responses.',
     inputSchema: {
-      survey_id: z.string().min(1),
+      survey_id: z.string().min(1).describe('The survey ID from the create_survey output (last segment of the survey_url, e.g. "abc123efgh45")'),
     },
   },
   async ({ survey_id: surveyId }) => {
@@ -241,7 +239,7 @@ server.registerTool(
   'list_surveys',
   {
     title: 'List Surveys',
-    description: 'List all surveys created with the current API key.',
+    description: 'List all surveys created with the current API key, ordered newest first. Use this to find a survey_id you need for get_results or close_survey, or to check which surveys are still open.',
     inputSchema: {},
   },
   async () => {
@@ -313,9 +311,9 @@ server.registerTool(
   'close_survey',
   {
     title: 'Close Survey',
-    description: 'Close a survey so it no longer accepts responses.',
+    description: 'Permanently close a survey so it no longer accepts new responses. Use this when you have enough responses or the data collection window has passed. Returns the final response count. Closing is irreversible via MCP — use PATCH /api/surveys/{id} to re-open.',
     inputSchema: {
-      survey_id: z.string().min(1),
+      survey_id: z.string().min(1).describe('The survey ID to close'),
     },
   },
   async ({ survey_id: surveyId }) => {

@@ -1,0 +1,17 @@
+runtime: "typescript"
+startCommand:
+  type: "stdio"
+  configSchema:
+    type: object
+    properties:
+      apiKey:
+        type: string
+        description: "Your HumanSurvey API key (starts with mts_sk_). Get one at https://www.humansurvey.co"
+    required:
+      - apiKey
+  commandFunction: |-
+    (config) => ({
+      command: "npx",
+      args: ["-y", "@mts/mcp-server"],
+      env: { MTS_API_KEY: config.apiKey }
+    })

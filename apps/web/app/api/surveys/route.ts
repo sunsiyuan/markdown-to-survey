@@ -22,11 +22,13 @@ export async function POST(request: Request) {
         schema?: SurveyInput
         max_responses?: number
         expires_at?: string | null
+        webhook_url?: string
       }
     | null
   const schemaInput = body?.schema
   const maxResponses = body?.max_responses
   const expiresAt = body?.expires_at
+  const webhookUrl = body?.webhook_url?.trim() || null
 
   if (!schemaInput) {
     return NextResponse.json({ error: 'schema is required' }, { status: 400 })
@@ -49,6 +51,13 @@ export async function POST(request: Request) {
   ) {
     return NextResponse.json(
       { error: 'expires_at must be a valid ISO date' },
+      { status: 400 },
+    )
+  }
+
+  if (webhookUrl !== null && !/^https?:\/\/.+/.test(webhookUrl)) {
+    return NextResponse.json(
+      { error: 'webhook_url must be a valid http or https URL' },
       { status: 400 },
     )
   }
@@ -83,7 +92,8 @@ export async function POST(request: Request) {
         markdown,
         status,
         max_responses,
-        expires_at
+        expires_at,
+        webhook_url
       )
       VALUES (
         ${id},
@@ -94,7 +104,8 @@ export async function POST(request: Request) {
         ${JSON.stringify(schemaInput)},
         'open',
         ${maxResponses ?? null},
-        ${expiresAt ?? null}::timestamptz
+        ${expiresAt ?? null}::timestamptz,
+        ${webhookUrl}
       )
     `
   } catch (error) {
