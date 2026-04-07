@@ -19,7 +19,7 @@ function getClient() {
   return client
 }
 
-export const sql = new Proxy({} as NeonQueryFunction<false, false>, {
+export const sql = new Proxy((() => {}) as unknown as NeonQueryFunction<false, false>, {
   apply(_target, thisArg, argArray) {
     return Reflect.apply(getClient(), thisArg, argArray)
   },
