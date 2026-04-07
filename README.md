@@ -140,7 +140,7 @@ Available tools:
 ### Use the HTTP API
 
 ```bash
-curl -X POST https://mts.vercel.app/api/keys \
+curl -X POST https://www.humansurvey.co/api/keys \
   -H "Content-Type: application/json" \
   -d '{"name":"my claude agent"}'
 ```
@@ -148,7 +148,7 @@ curl -X POST https://mts.vercel.app/api/keys \
 Then create a survey:
 
 ```bash
-curl -X POST https://mts.vercel.app/api/surveys \
+curl -X POST https://www.humansurvey.co/api/surveys \
   -H "Authorization: Bearer mts_sk_..." \
   -H "Content-Type: application/json" \
   -d '{"markdown": "# My Survey\n\n**Q1. How are you?**\n\n- ☐ Great\n- ☐ OK\n- ☐ Not great"}'
@@ -165,15 +165,15 @@ Response:
 Read results:
 
 ```bash
-curl https://mts.vercel.app/api/surveys/abc123/responses \
+curl https://www.humansurvey.co/api/surveys/abc123/responses \
   -H "Authorization: Bearer mts_sk_..."
 ```
 
 ## Public Surface
 
-- Docs page: `https://mts.vercel.app/docs`
-- OpenAPI: `https://mts.vercel.app/api/openapi.json`
-- AI index: `https://mts.vercel.app/llms.txt`
+- Docs page: `https://www.humansurvey.co/docs`
+- OpenAPI: `https://www.humansurvey.co/api/openapi.json`
+- AI index: `https://www.humansurvey.co/llms.txt`
 
 ## Tech Stack
 

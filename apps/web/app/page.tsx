@@ -13,7 +13,7 @@ const links = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-[var(--page-gradient)]">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-16 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8 sm:gap-16 sm:px-6 sm:py-10 lg:px-8">
 
         {/* Header */}
         <header className="flex items-center justify-between">
@@ -41,20 +41,20 @@ export default function Home() {
         {/* Hero */}
         <section className="max-w-2xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-            Human input API for agents
+            Structured human input for AI agents
           </p>
-          <h1 className="mt-4 text-[2.6rem] font-semibold leading-[1.0] tracking-[-0.05em] text-slate-950 sm:text-[3.5rem]">
-            Submit a schema.{' '}
+          <h1 className="mt-4 text-[2.2rem] font-semibold leading-[1.15] tracking-[-0.04em] text-slate-950 sm:text-[3.5rem] sm:leading-[1.0] sm:tracking-[-0.05em]">
+            Collect structured input{' '}
             <br className="hidden sm:block" />
-            Get a survey.{' '}
+            from many humans.{' '}
             <br className="hidden sm:block" />
-            Collect responses.
+            Let agents use it.
           </h1>
           <p className="mt-6 text-base leading-7 text-slate-700 sm:text-lg sm:leading-8">
-            MTS hosts the human step in your agent workflow. Send a structured
-            request, a person fills it out, you get JSON back — via API or MCP.
+            Agents send a schema, respondents fill out a hosted survey, agents
+            get clean structured JSON back — at any scale, via REST API or MCP.
           </p>
-          <div className="mt-8 flex gap-3">
+          <div className="mt-8 flex flex-wrap gap-3">
             <a
               href="#try-it"
               className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"

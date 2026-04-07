@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Authentication, JSON schema input, API routes, MCP tools, and conditional logic for Markdown to Survey.',
 }
 
-const authSnippet = `curl -X POST https://ask-human.vercel.app/api/keys \\
+const authSnippet = `curl -X POST https://www.humansurvey.co/api/keys \\
   -H "Content-Type: application/json" \\
   -d '{"name":"triage-agent"}'`
 
@@ -75,7 +75,7 @@ const schemaSnippet = `{
   }
 }`
 
-const createSurveySnippet = `curl -X POST https://ask-human.vercel.app/api/surveys \\
+const createSurveySnippet = `curl -X POST https://www.humansurvey.co/api/surveys \\
   -H "Authorization: Bearer mts_sk_..." \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -100,10 +100,10 @@ const createSurveySnippet = `curl -X POST https://ask-human.vercel.app/api/surve
     "expires_at": "2026-12-31T23:59:59.000Z"
   }'`
 
-const getResultsSnippet = `curl https://ask-human.vercel.app/api/surveys/svy_123/responses \\
+const getResultsSnippet = `curl https://www.humansurvey.co/api/surveys/svy_123/responses \\
   -H "Authorization: Bearer mts_sk_..." `
 
-const patchSurveySnippet = `curl -X PATCH https://ask-human.vercel.app/api/surveys/svy_123 \\
+const patchSurveySnippet = `curl -X PATCH https://www.humansurvey.co/api/surveys/svy_123 \\
   -H "Authorization: Bearer mts_sk_..." \\
   -H "Content-Type: application/json" \\
   -d '{"status":"closed"}'`

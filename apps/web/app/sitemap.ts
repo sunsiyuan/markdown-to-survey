@@ -3,13 +3,13 @@ import type { MetadataRoute } from 'next'
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: 'https://ask-human.vercel.app',
+      url: 'https://www.humansurvey.co',
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 1,
     },
     {
-      url: 'https://ask-human.vercel.app/docs',
+      url: 'https://www.humansurvey.co/docs',
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.9,

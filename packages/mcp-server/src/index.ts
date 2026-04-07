@@ -18,6 +18,15 @@ type SurveyListItem = {
   created_at?: string
 }
 
+type SurveyMetadata = {
+  id?: string
+  title?: string
+  status?: string
+  response_count?: number
+  max_responses?: number | null
+  error?: string
+}
+
 type ResultsQuestion =
   | {
       id: string
@@ -58,7 +67,7 @@ type ResultsQuestion =
       }
     }
 
-const API_BASE_URL = process.env.MTS_API_URL ?? 'https://mts.vercel.app'
+const API_BASE_URL = process.env.MTS_API_URL ?? 'https://www.humansurvey.co'
 const API_KEY = process.env.MTS_API_KEY
 
 const server = new McpServer({
@@ -166,14 +175,7 @@ server.registerTool(
     const surveyResponse = await fetch(
       `${API_BASE_URL}/api/surveys/${encodeURIComponent(surveyId)}`,
     )
-    const surveyPayload = (await surveyResponse.json().catch(() => null)) as
-      | {
-          id?: string
-          title?: string
-          responses?: ResponseRecord[]
-          error?: string
-        }
-      | null
+    const surveyPayload = (await surveyResponse.json().catch(() => null)) as SurveyMetadata | null
 
     if (!surveyResponse.ok || !surveyPayload?.id) {
       return {
@@ -220,6 +222,8 @@ server.registerTool(
       surveyPayload.title ?? 'Survey results',
       responsesPayload.questions,
       responsesPayload.count ?? responsesPayload.raw?.length ?? 0,
+      surveyPayload.status,
+      surveyPayload.max_responses ?? null,
     )
 
     return {
@@ -406,7 +410,7 @@ function requireApiKey() {
     content: [
       {
         type: 'text' as const,
-        text: 'Error: MTS_API_KEY environment variable is not set.\nGet an API key at https://mts.vercel.app or via: POST /api/keys',
+        text: 'Error: MTS_API_KEY environment variable is not set.\nGet an API key at https://www.humansurvey.co or via: POST /api/keys',
       },
     ],
     isError: true,
@@ -423,8 +427,24 @@ function formatResultsSummary(
   title: string,
   questions: ResultsQuestion[],
   responseCount: number,
+  status?: string,
+  maxResponses?: number | null,
 ) {
-  const lines = [`Survey: ${title} (${responseCount} responses)`, '']
+  const countLabel =
+    maxResponses != null
+      ? `${responseCount}/${maxResponses} responses`
+      : `${responseCount} response${responseCount !== 1 ? 's' : ''}`
+
+  const statusLabel = status === 'closed' ? 'closed' : 'open'
+
+  const collectionStatus =
+    status === 'closed'
+      ? 'Collection complete.'
+      : maxResponses != null && responseCount >= maxResponses
+        ? 'Collection complete (max responses reached).'
+        : 'Still collecting — call get_results again to check for new responses.'
+
+  const lines = [`Survey: ${title} | Status: ${statusLabel} | ${countLabel}`, collectionStatus, '']
 
   questions.forEach((question, index) => {
     lines.push(`Q${index}. (${question.type}) ${question.label}`)

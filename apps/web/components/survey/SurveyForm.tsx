@@ -100,7 +100,7 @@ export function SurveyForm({ surveyId, survey }: SurveyFormProps) {
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
             Interactive survey
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
+          <h1 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
             {survey.title}
           </h1>
           {survey.description ? (
@@ -164,12 +164,12 @@ export function SurveyForm({ surveyId, survey }: SurveyFormProps) {
           })}
         </div>
 
-        <div className="mt-8 flex items-center justify-between rounded-[2rem] bg-white px-6 py-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)]">
+        <div className="mt-8 flex flex-col gap-4 rounded-[2rem] bg-white px-6 py-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-slate-500">Your progress is saved automatically.</p>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="min-h-11 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+            className="min-h-11 w-full rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300 sm:w-auto"
           >
             {isSubmitting ? 'Submitting...' : 'Submit response'}
           </button>

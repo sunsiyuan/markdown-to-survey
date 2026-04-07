@@ -183,7 +183,7 @@ export function TryItPanel() {
                   type="button"
                   onClick={handleGenerateKey}
                   disabled={isGeneratingKey}
-                  className="inline-flex h-9 items-center justify-center rounded-full border border-slate-900 px-4 text-xs font-semibold text-slate-950 transition hover:bg-slate-950 hover:text-white disabled:opacity-60"
+                  className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border border-slate-900 px-4 text-xs font-semibold text-slate-950 transition hover:bg-slate-950 hover:text-white disabled:opacity-60"
                 >
                   {isGeneratingKey ? 'Creating…' : 'Create key'}
                 </button>
@@ -196,10 +196,11 @@ export function TryItPanel() {
             Input
           </p>
           <textarea
-            className="min-h-64 w-full rounded-2xl border border-[var(--panel-border)] bg-[var(--code-surface)] px-5 py-4 font-mono text-[13px] leading-6 text-[var(--accent-fg)] outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)] sm:text-sm sm:leading-7"
+            className="min-h-40 w-full rounded-2xl border border-[var(--panel-border)] bg-[var(--code-surface)] px-5 py-4 font-mono text-[13px] leading-6 text-[var(--accent-fg)] outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)] sm:min-h-64 sm:text-sm sm:leading-7"
             value={markdown}
             onChange={(e) => {
               setMarkdown(e.target.value)
+              if (error) setError('')
               if (step !== 'idle') {
                 setStep('idle')
                 setSchema(null)
@@ -220,7 +221,7 @@ export function TryItPanel() {
                 : 'Create survey'}
           </button>
 
-          {step === 'error' && error ? (
+          {error ? (
             <p className="text-sm text-rose-600">{error}</p>
           ) : null}
         </div>

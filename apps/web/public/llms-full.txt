@@ -218,6 +218,6 @@ Supported operators:
 
 ## Discoverability
 
-- Site docs: https://ask-human.vercel.app/docs
-- OpenAPI: https://ask-human.vercel.app/api/openapi.json
-- llms.txt: https://ask-human.vercel.app/llms.txt
+- Site docs: https://www.humansurvey.co/docs
+- OpenAPI: https://www.humansurvey.co/api/openapi.json
+- llms.txt: https://www.humansurvey.co/llms.txt

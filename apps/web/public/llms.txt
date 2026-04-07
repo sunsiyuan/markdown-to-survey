@@ -29,7 +29,7 @@ Tools: `create_survey`, `get_results`, `list_surveys`, `close_survey`
 Get an API key:
 
 ```bash
-curl -X POST https://ask-human.vercel.app/api/keys \
+curl -X POST https://www.humansurvey.co/api/keys \
   -H "Content-Type: application/json" \
   -d '{"name":"my agent"}'
 ```
@@ -37,7 +37,7 @@ curl -X POST https://ask-human.vercel.app/api/keys \
 Create a survey from JSON schema:
 
 ```bash
-curl -X POST https://ask-human.vercel.app/api/surveys \
+curl -X POST https://www.humansurvey.co/api/surveys \
   -H "Authorization: Bearer mts_sk_..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -65,6 +65,6 @@ curl -X POST https://ask-human.vercel.app/api/surveys \
 
 ## Docs
 
-- Full docs: https://ask-human.vercel.app/docs
-- OpenAPI: https://ask-human.vercel.app/api/openapi.json
-- Full AI index: https://ask-human.vercel.app/llms-full.txt
+- Full docs: https://www.humansurvey.co/docs
+- OpenAPI: https://www.humansurvey.co/api/openapi.json
+- Full AI index: https://www.humansurvey.co/llms-full.txt
