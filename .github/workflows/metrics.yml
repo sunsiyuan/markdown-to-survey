@@ -12,10 +12,27 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run metrics
+        id: metrics
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: ./scripts/metrics.sh
+        run: |
+          output=$(./scripts/metrics.sh)
+          echo "$output"
+          {
+            echo 'METRICS<<EOF'
+            echo "$output"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Post to summary
+      - name: Send to Telegram
         if: always()
-        run: echo "Metrics logged in job output above."
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d parse_mode="Markdown" \
+            -d text="\`\`\`
+          ${{ steps.metrics.outputs.METRICS }}
+          \`\`\`"
