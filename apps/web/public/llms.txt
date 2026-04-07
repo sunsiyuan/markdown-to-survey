@@ -1,12 +1,31 @@
-# Markdown to Survey (MTS)
+# HumanSurvey (MTS)
 
-> The survey layer for AI agents. Create interactive surveys from JSON schema, collect responses from humans, and retrieve structured results via API or MCP.
+> Feedback collection infrastructure for AI agents. When an agent is doing a job that involves gathering structured opinions or data from a group of people: create a survey, share the URL, retrieve structured results.
 
-## What is MTS?
+## What MTS does
 
-MTS lets AI agents gather structured information from humans. An agent sends a survey schema to the MTS API, gets a shareable respondent URL, and later retrieves structured results. The web demo accepts plain text or Markdown and uses an LLM to translate it into schema — this mirrors what an agent would do.
+An agent working on a long-horizon task sends a JSON schema to the MTS API, gets a shareable respondent URL, and later retrieves aggregated results from the people who responded. The agent owns the workflow; humans fill in the data.
 
-## MCP Integration
+**Typical agent scenarios:**
+- Event management agent → post-event attendee satisfaction survey
+- Product agent → user feedback after a launch or feature release
+- Community agent → periodic member pulse surveys
+- Customer success agent → CSAT after support ticket resolution
+
+**What MTS is NOT:** survey dashboards, visual form builders, email campaigns, analytics UI, or decision gates / human-in-the-loop checkpoints for single users.
+
+## Typical agent workflow
+
+```
+1. POST /api/keys                         → save mts_sk_... key (one-time setup)
+2. POST /api/surveys  { schema: {...} }   → get /s/{id} URL + survey_id
+3. share /s/{id} with the target group (email, Slack, etc.)
+4. GET  /api/surveys/{id}/responses       → check results; repeat over hours or days
+5. PATCH /api/surveys/{id} { status: "closed" }  → close when done
+6. act on the structured results
+```
+
+## MCP Integration (Claude Code)
 
 Add to `~/.claude.json`:
 
@@ -26,15 +45,16 @@ Tools: `create_survey`, `get_results`, `list_surveys`, `close_survey`
 
 ## API Quick Start
 
-Get an API key:
+Get an API key (no auth needed):
 
 ```bash
 curl -X POST https://www.humansurvey.co/api/keys \
   -H "Content-Type: application/json" \
-  -d '{"name":"my agent"}'
+  -d '{"name":"my-agent"}'
+# → { "key": "mts_sk_..." }  ← save this
 ```
 
-Create a survey from JSON schema:
+Create a survey:
 
 ```bash
 curl -X POST https://www.humansurvey.co/api/surveys \
@@ -46,22 +66,23 @@ curl -X POST https://www.humansurvey.co/api/surveys \
       "sections": [{
         "questions": [
           { "type": "single_choice", "label": "Which environment?", "required": true,
-            "options": [{ "label": "Local" }, { "label": "Staging" }, { "label": "Production" }] },
-          { "type": "scale", "label": "How urgent?", "required": true,
-            "min": 1, "max": 5, "minLabel": "Low", "maxLabel": "Critical" }
+            "options": [{ "label": "Staging" }, { "label": "Production" }] },
+          { "type": "scale", "label": "How urgent?", "min": 1, "max": 5,
+            "minLabel": "Low", "maxLabel": "Critical" }
         ]
       }]
     }
   }'
+# → { "survey_url": "/s/abc123", "question_count": 2 }
 ```
 
 ## Question Types
 
-- `single_choice` — one selection from a list of options
-- `multi_choice` — one or more selections from a list of options
-- `text` — free-form text response
-- `scale` — numeric position on a bounded range (max 11 points)
-- `matrix` — apply shared options across multiple rows
+- `single_choice` — one selection; requires `options`
+- `multi_choice` — multiple selections; requires `options`
+- `text` — free-form string
+- `scale` — number on a bounded range; requires `min`, `max` (range ≤ 11 points)
+- `matrix` — shared options across rows; requires `rows`, `columns`
 
 ## Docs
 

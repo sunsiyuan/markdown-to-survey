@@ -1,6 +1,6 @@
 # Architecture
 
-MTS is the survey infrastructure layer for AI agents. The system is intentionally narrow: agents create surveys, humans answer them, and agents retrieve structured results.
+MTS is feedback collection infrastructure for AI agents. Agents doing long-horizon work — event management, product launches, community operations — create surveys from JSON schema, collect responses from groups of people, and retrieve structured results.
 
 ## System Overview
 
@@ -21,10 +21,10 @@ MTS is the survey infrastructure layer for AI agents. The system is intentionall
 
 The flow is intentionally small:
 
-1. An agent creates a survey from Markdown or JSON schema.
+1. An agent creates a survey from JSON schema.
 2. MTS stores the normalized survey schema and returns a respondent URL.
-3. Humans submit responses through the hosted survey page.
-4. The creator retrieves structured results through the authenticated API or MCP.
+3. A group of humans submits responses through the hosted survey page over hours or days.
+4. The agent retrieves structured results through the authenticated API or MCP and acts on them.
 
 ## Architecture Principles
 
@@ -35,38 +35,7 @@ The flow is intentionally small:
 
 ## Main Components
 
-### 1. Parser (`packages/parser`)
-
-The parser converts Markdown survey syntax into the canonical Survey JSON schema used everywhere else.
-
-Pipeline:
-
-```
-Markdown
-  → remark parse
-  → survey-specific node inspection
-  → normalized Survey JSON
-  → validation / ID assignment
-```
-
-Responsibilities:
-
-- Recognize question structure from Markdown
-- Normalize to stable IDs (`section_0`, `q_0`, `opt_0`, ...)
-- Support both human-authored Markdown and feature parity with JSON schema input
-- Export the shared schema types consumed by the web app and MCP server
-
-Supported semantic question types:
-
-- `single_choice`
-- `multi_choice`
-- `text`
-- `matrix`
-- `scale`
-
-`composite` is intentionally not part of the schema. When Markdown contains multiple adjacent input blocks, they are represented as sequential questions.
-
-### 2. Web App (`apps/web`)
+### 1. Web App (`apps/web`)
 
 The Next.js app serves both the machine-facing API and the human-facing survey form.
 
@@ -74,7 +43,7 @@ API responsibilities:
 
 - `POST /api/keys` creates API keys
 - `GET /api/keys` and `DELETE /api/keys/[id]` manage keys
-- `POST /api/surveys` creates surveys from Markdown or JSON schema
+- `POST /api/surveys` creates surveys from JSON schema
 - `GET /api/surveys` lists surveys for the authenticated creator
 - `GET /api/surveys/[id]` returns public survey metadata/schema for respondents
 - `PATCH /api/surveys/[id]` updates lifecycle state
@@ -86,9 +55,11 @@ Page responsibilities:
 - `/s/[id]` renders the survey form, enforces closed/expired/full state, and submits responses
 - `/docs`, `/llms.txt`, and `/api/openapi.json` make the product discoverable to developers and agents
 
+Demo route (`/api/demo/parse`): accepts plain text or Markdown and uses an LLM to translate it into JSON schema. This is a web demo convenience, not part of the agent API surface — agents generate JSON schema directly.
+
 There is intentionally no browser results dashboard. Results access is defined by the authenticated API and MCP tools.
 
-### 3. MCP Server (`packages/mcp-server`)
+### 2. MCP Server (`packages/mcp-server`)
 
 The MCP server is a thin authenticated client over the hosted API.
 

@@ -2,72 +2,86 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Docs — Markdown to Survey',
+  title: 'Docs — HumanSurvey',
   description:
-    'Authentication, JSON schema input, API routes, MCP tools, and conditional logic for Markdown to Survey.',
+    'Authentication, JSON schema input, API routes, MCP tools, and conditional logic for HumanSurvey.',
 }
 
 const authSnippet = `curl -X POST https://www.humansurvey.co/api/keys \\
   -H "Content-Type: application/json" \\
-  -d '{"name":"triage-agent"}'`
+  -d '{"name":"event-agent"}'`
 
-const markdownChoiceSnippet = `**Q1. Which environment are you debugging?**
+const markdownChoiceSnippet = `**Q1. Would you attend a future event?**
 
-- ☐ Local
-- ☐ Staging
-- ☐ Production`
+- ☐ Definitely
+- ☐ Maybe
+- ☐ Unlikely`
 
-const markdownTextSnippet = `**Q2. What happened right before the error?**
+const markdownTextSnippet = `**Q2. What's one thing we should improve?**
 
 > _______________________________________________`
 
-const markdownScaleSnippet = `**Q3. How urgent is this issue?**
+const markdownScaleSnippet = `**Q3. How would you rate the event overall?**
 
-[scale 1-5 min-label="Low" max-label="Critical"]`
+[scale 1-5 min-label="Poor" max-label="Excellent"]`
 
-const markdownMatrixSnippet = `| # | Workflow Step | Status |
-|---|---------------|--------|
-| 1 | Install       | ☐Good ☐OK ☐Bad |
-| 2 | Login         | ☐Good ☐OK ☐Bad |
-| 3 | Reporting     | ☐Good ☐OK ☐Bad |`
+const markdownMatrixSnippet = `| # | Session | Rating |
+|---|---------|--------|
+| 1 | Keynote      | ☐Excellent ☐Good ☐Fair ☐Poor |
+| 2 | Workshops    | ☐Excellent ☐Good ☐Fair ☐Poor |
+| 3 | Networking   | ☐Excellent ☐Good ☐Fair ☐Poor |`
 
-const conditionalSnippet = `**Q1. Did the deploy finish?**
+const conditionalSnippet = `**Q1. Did you participate in the networking session?**
 
 - ☐ Yes
 - ☐ No
 
-**Q2. Which step failed?**
+**Q2. What would have made networking more valuable?**
 
-> show if: Q1 = "No"
+> show if: Q1 = "Yes"
 
 > _______________________________________________`
 
 const schemaSnippet = `{
   "schema": {
-    "title": "Incident Intake",
-    "description": "Collect the missing facts before the agent responds.",
+    "title": "Post-Event Feedback",
+    "description": "Help us improve future events. Takes about 2 minutes.",
     "sections": [
       {
-        "title": "Context",
+        "title": "Your experience",
         "questions": [
           {
-            "type": "single_choice",
-            "label": "Which environment is affected?",
-            "required": true,
-            "options": [
-              { "label": "Local" },
-              { "label": "Staging" },
-              { "label": "Production" }
-            ]
-          },
-          {
             "type": "scale",
-            "label": "How urgent is this issue?",
+            "label": "How would you rate the event overall?",
             "required": true,
             "min": 1,
             "max": 5,
-            "minLabel": "Low",
-            "maxLabel": "Critical"
+            "minLabel": "Poor",
+            "maxLabel": "Excellent"
+          },
+          {
+            "type": "multi_choice",
+            "label": "Which sessions did you attend?",
+            "options": [
+              { "label": "Keynote" },
+              { "label": "Workshops" },
+              { "label": "Panels" },
+              { "label": "Networking" }
+            ]
+          },
+          {
+            "type": "text",
+            "label": "What's one thing we should improve?"
+          },
+          {
+            "type": "single_choice",
+            "label": "Would you attend a future event?",
+            "required": true,
+            "options": [
+              { "label": "Definitely" },
+              { "label": "Maybe" },
+              { "label": "Unlikely" }
+            ]
           }
         ]
       }
@@ -80,23 +94,25 @@ const createSurveySnippet = `curl -X POST https://www.humansurvey.co/api/surveys
   -H "Content-Type: application/json" \\
   -d '{
     "schema": {
-      "title": "Incident Intake",
+      "title": "Post-Event Feedback",
       "sections": [{
         "questions": [
           {
-            "type": "single_choice",
-            "label": "Which environment is affected?",
+            "type": "scale",
+            "label": "How would you rate the event overall?",
             "required": true,
-            "options": [
-              { "label": "Local" },
-              { "label": "Staging" },
-              { "label": "Production" }
-            ]
+            "min": 1,
+            "max": 5,
+            "minLabel": "Poor",
+            "maxLabel": "Excellent"
+          },
+          {
+            "type": "text",
+            "label": "What\\'s one thing we should improve?"
           }
         ]
       }]
     },
-    "max_responses": 25,
     "expires_at": "2026-12-31T23:59:59.000Z"
   }'`
 
@@ -120,25 +136,26 @@ const mcpConfigSnippet = `{
 
 const mcpUsageSnippet = `create_survey({
   schema: {
-    title: "Incident Intake",
+    title: "Post-Event Feedback",
     sections: [{
       questions: [
-        { type: "single_choice", label: "Which environment?", required: true,
-          options: [{ label: "Local" }, { label: "Staging" }, { label: "Production" }] },
-        { type: "scale", label: "How urgent?", required: true, min: 1, max: 5,
-          minLabel: "Low", maxLabel: "Critical" }
+        { type: "scale", label: "How would you rate the event overall?",
+          required: true, min: 1, max: 5, minLabel: "Poor", maxLabel: "Excellent" },
+        { type: "multi_choice", label: "Which sessions did you attend?",
+          options: [{ label: "Keynote" }, { label: "Workshops" }, { label: "Networking" }] },
+        { type: "text", label: "What's one thing we should improve?" },
+        { type: "single_choice", label: "Would you attend a future event?",
+          required: true, options: [{ label: "Definitely" }, { label: "Maybe" }, { label: "Unlikely" }] }
       ]
     }]
   }
 })
 
-get_results({
-  survey_id: "svy_123"
-})
+// share /s/{id} with attendees, check back later
+get_results({ survey_id: "svy_123" })
 
-close_survey({
-  survey_id: "svy_123"
-})`
+// once you have enough responses
+close_survey({ survey_id: "svy_123" })`
 
 const apiRoutes = [
   ['POST /api/keys', 'Public', 'Create a new API key and return the raw secret once.'],
@@ -153,8 +170,8 @@ const apiRoutes = [
 ]
 
 const mcpTools = [
-  ['create_survey', 'Create a survey from Markdown or JSON schema and return the respondent URL.'],
-  ['get_results', 'Fetch structured results for a survey by survey_id.'],
+  ['create_survey', 'Create a survey from JSON schema and return the respondent URL and survey ID.'],
+  ['get_results', 'Fetch aggregated results for a survey by survey_id.'],
   ['list_surveys', 'List surveys owned by the configured API key.'],
   ['close_survey', 'Close an open survey so it stops collecting responses.'],
 ]
@@ -193,12 +210,12 @@ export default function DocsPage() {
             Docs
           </p>
           <h1 className="mt-4 max-w-4xl text-3xl leading-tight font-semibold tracking-[-0.05em] text-slate-950 sm:text-5xl">
-            API and protocol reference for AI agents that need human input.
+            API reference for agents that collect structured feedback from groups.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-slate-700 sm:text-lg sm:leading-8">
             MTS exposes a minimal authenticated API plus an MCP server. Agents create surveys from
-            JSON schema, humans answer at a hosted URL, and the agent retrieves
-            structured results.
+            JSON schema, a group of humans answers at a hosted URL, and the agent retrieves
+            structured results when ready.
           </p>
           <div className="mt-6 flex flex-col gap-3 text-sm sm:flex-row sm:flex-wrap">
             <a
@@ -293,8 +310,9 @@ export default function DocsPage() {
               </p>
               <CodeBlock code={schemaSnippet} />
               <p>
-                The web demo lets you write plain text or Markdown and uses an LLM to translate it
-                into schema before submitting — this mirrors what your agent would do.
+                The web demo lets you describe a survey in plain text or Markdown and uses an LLM
+                to translate it into schema — this is a demo convenience, not an API feature.
+                Agents generate JSON schema directly.
               </p>
             </Section>
 

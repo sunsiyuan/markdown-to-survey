@@ -1,23 +1,22 @@
 {
   "name": "@mts/mcp-server",
   "version": "0.1.0",
-  "description": "MCP server for Markdown to Survey — let AI agents create surveys and collect human responses",
+  "description": "MCP server for HumanSurvey — let AI agents collect structured feedback from groups of people",
   "keywords": [
     "mcp",
     "mcp-server",
     "model-context-protocol",
     "survey",
-    "form",
-    "questionnaire",
+    "feedback",
+    "human-in-the-loop",
     "claude",
     "claude-code",
-    "ai-agent",
-    "markdown"
+    "ai-agent"
   ],
   "homepage": "https://www.humansurvey.co",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sunsiyuan/markdown-to-survey"
+    "url": "https://github.com/sunsiyuan/human-survey"
   },
   "type": "module",
   "bin": "dist/index.js",

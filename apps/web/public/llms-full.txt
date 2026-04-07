@@ -1,14 +1,32 @@
-# Markdown to Survey (MTS)
+# HumanSurvey (MTS)
 
-> Survey infrastructure for AI agents. Markdown or JSON schema in, respondent URL out, structured results back via authenticated API or MCP.
+> Feedback collection infrastructure for AI agents. An agent working on a long-horizon task creates a survey from JSON schema, shares the URL with a group of people, and retrieves structured results when ready.
+
+## What MTS is NOT
+
+MTS does not provide: survey dashboards, visual form builders, email campaigns, analytics/reporting UI, template libraries, or human-in-the-loop decision gates for single users. If a feature mainly serves human survey operators, it is out of scope.
+
+## Typical agent scenarios
+
+- **Post-event feedback** — event management agent creates an attendee satisfaction survey after the event ends, collects responses over 48 hours, summarizes results for the organizer
+- **Product launch survey** — product agent sends a feedback survey to users after a feature ships, aggregates NPS and open-ended responses
+- **Team pulse** — HR or team agent runs a periodic health check survey across a team, tracks trends over time
+- **Post-resolution CSAT** — customer success agent triggers a satisfaction survey when a support ticket closes
 
 ## Core Flow
 
-1. Create an API key with `POST /api/keys`
-2. Create a survey with `POST /api/surveys`
-3. Share the returned `/s/{survey_id}` URL with respondents
-4. Read results with `GET /api/surveys/{survey_id}/responses`
-5. Optionally list surveys or close a survey via API or MCP
+```
+Agent is doing a long-horizon job
+  → decides it needs structured feedback from a group
+  → POST /api/keys           # one-time setup, save the key
+  → POST /api/surveys        # create survey from JSON schema
+  → share /s/{id} with the target group (email, Slack, in-product, etc.)
+  → GET  /api/surveys/{id}/responses  # check results over hours or days
+  → PATCH /api/surveys/{id}  # close when done
+  → act on the structured results
+```
+
+The survey ID is extracted from the `survey_url` field in the create response (e.g. `/s/abc123` → ID is `abc123`).
 
 ## Authentication
 
@@ -137,63 +155,89 @@ Supported operators:
 
 ### `POST /api/keys`
 
-- Request: `{ "name": "my agent" }`
-- Response: `{ "id": "...", "key": "mts_sk_...", "name": "...", "created_at": "..." }`
+- No auth required
+- Request: `{ "name": "my-agent" }` (name is optional)
+- Response 201: `{ "id": "abc123", "key": "mts_sk_...", "name": "my-agent", "created_at": "..." }`
+- **Save the key value — it is shown only once**
 
 ### `GET /api/keys`
 
 - Auth required
-- Returns metadata for the current API key
+- Returns metadata (id, name, created_at) for the current key — key value is not returned
 
 ### `DELETE /api/keys/{id}`
 
 - Auth required
-- Revokes the current key
+- Revokes the current key. Surveys remain but key can no longer call creator endpoints.
 
 ### `POST /api/surveys`
 
 - Auth required
-- Accepts either `{ "markdown": "..." }` or `{ "schema": { ... } }`
-- Optional lifecycle fields: `max_responses`, `expires_at`
-- Response: `{ "survey_url": "/s/abc123", "question_count": 3 }`
+- Request body: `{ "schema": { ... }, "max_responses": 50, "expires_at": "2026-04-14T00:00:00Z", "webhook_url": "https://..." }`
+- `schema` is required. `max_responses`, `expires_at`, and `webhook_url` are optional.
+- `webhook_url`: if set, receives a POST request once when the survey closes. Payload: `{ "survey_id", "status": "closed", "closed_reason": "manual" | "max_responses", "response_count", "closed_at" }`. Fires for manual close (PATCH status=closed) and max_responses limit reached. Does NOT fire when expires_at elapses.
+- Response 201: `{ "survey_url": "/s/abc123", "question_count": 3 }`
+- Error 400: `{ "error": "schema is required" }` or `{ "error": "Invalid schema", "errors": ["..."] }`
 
 ### `GET /api/surveys`
 
 - Auth required
-- Lists surveys for the current key
+- Returns array of surveys owned by the current key, newest first
+- Each item: `{ "id", "title", "status", "response_count", "max_responses", "expires_at", "created_at" }`
 
 ### `GET /api/surveys/{id}`
 
-- Public
-- Returns survey metadata, schema, and lifecycle fields
+- **Public** — no auth required
+- Returns survey metadata, full schema, response count, status, lifecycle fields
+- status is `"open"` or `"closed"`
 
 ### `PATCH /api/surveys/{id}`
 
-- Auth required
-- Update `status`, `max_responses`, `expires_at`
+- Auth required, must own the survey
+- Update any subset of: `{ "status": "closed", "max_responses": 100, "expires_at": "..." }`
+- Response 200: `{ "id", "status", "max_responses", "expires_at" }`
 
 ### `POST /api/surveys/{id}/responses`
 
-- Public
-- Request: `{ "answers": { "q_0": "opt_0", "q_1": 4 } }`
+- **Public** — no auth required
+- Request: `{ "answers": { "q_0": "opt_1", "q_1": ["opt_0", "opt_2"], "q_2": 4, "q_3": "free text" } }`
+- Answer value types by question type:
+  - `single_choice` → option ID string (e.g. `"opt_0"`)
+  - `multi_choice` → array of option ID strings (e.g. `["opt_0", "opt_2"]`)
+  - `scale` → number within the defined range (e.g. `4`)
+  - `text` → string
+- Response 201: `{ "id": "responseId" }`
+- Error 410: `{ "error": "This survey is closed" }` / `"...expired"` / `"...full"`
 
 ### `GET /api/surveys/{id}/responses`
 
-- Auth required
+- Auth required, must own the survey
 - Returns:
-  - `count`
-  - `questions` with precomputed tallies/stats/responses
-  - `raw` individual responses
+  - `count`: total response count
+  - `questions`: pre-aggregated results per question (see below)
+  - `raw`: array of individual responses
 
-## Error Responses
+#### Aggregated question shapes
 
-- `401 Missing or invalid Authorization header`
-- `401 Invalid API key`
-- `400 Invalid schema`
-- `404 Survey not found`
-- `410 This survey is closed`
-- `410 This survey has expired`
-- `410 This survey is full`
+**single_choice / multi_choice:**
+```json
+{ "id": "q_0", "type": "single_choice", "label": "...", "options": [...], "tally": { "opt_0": 3, "opt_1": 1 } }
+```
+
+**scale:**
+```json
+{ "id": "q_1", "type": "scale", "label": "...", "min": 1, "max": 5, "stats": { "count": 4, "mean": 3.5, "median": 4, "distribution": { "1": 0, "2": 1, "3": 1, "4": 1, "5": 1 } } }
+```
+
+**text:**
+```json
+{ "id": "q_2", "type": "text", "label": "...", "responses": [{ "value": "...", "created_at": "..." }] }
+```
+
+**matrix:**
+```json
+{ "id": "q_3", "type": "matrix", "label": "...", "rows": [...], "columns": [...], "tally": { "row_0": { "opt_0": 2, "opt_1": 1 } } }
+```
 
 ## MCP Tools
 

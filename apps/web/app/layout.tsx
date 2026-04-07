@@ -16,43 +16,44 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.humansurvey.co'),
-  title: 'Markdown to Survey — Survey infrastructure for AI agents',
+  title: 'HumanSurvey — Feedback collection for AI agents',
   description:
-    'Create surveys from Markdown or JSON schema, collect human responses, and retrieve structured results via API or MCP.',
-  applicationName: 'Markdown to Survey',
+    'AI agents create surveys from JSON schema, collect structured feedback from groups of people, and retrieve machine-usable results via API or MCP.',
+  applicationName: 'HumanSurvey',
   keywords: [
     'survey api',
     'mcp server',
     'ai agent tools',
-    'markdown survey',
+    'feedback collection',
     'survey infrastructure',
     'json schema forms',
+    'agent feedback',
   ],
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Markdown to Survey (MTS)',
+    title: 'HumanSurvey — Feedback collection for AI agents',
     description:
-      'The survey layer for AI agents. Markdown in, structured human responses out.',
+      'Agents create surveys, groups of humans respond, agents get structured results back.',
     url: 'https://www.humansurvey.co',
-    siteName: 'Markdown to Survey',
+    siteName: 'HumanSurvey',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Markdown to Survey (MTS)',
+    title: 'HumanSurvey — Feedback collection for AI agents',
     description:
-      'Survey infrastructure for AI agents. Markdown or JSON schema in, structured results back.',
+      'Agents create surveys from JSON schema, collect group feedback, retrieve structured results via API or MCP.',
   },
 }
 
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: 'Markdown to Survey',
+  name: 'HumanSurvey',
   applicationCategory: 'DeveloperApplication',
-  description: 'Survey infrastructure for AI agents',
+  description: 'Feedback collection infrastructure for AI agents',
   url: 'https://www.humansurvey.co',
   operatingSystem: 'Web',
   offers: {

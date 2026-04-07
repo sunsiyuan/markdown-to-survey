@@ -1,25 +1,25 @@
-# Markdown to Survey (MTS)
+# HumanSurvey (MTS)
 
-The survey layer for AI agents.
+Feedback collection infrastructure for AI agents.
 
-MTS lets an agent ask humans for structured input:
+MTS lets an agent doing long-horizon work collect structured feedback from a group of people:
 
 ```text
-Agent needs input
-  → writes survey in Markdown or JSON schema
-  → calls MTS
-  → gets a shareable survey URL
-  → humans respond
-  → agent retrieves structured JSON results
+Agent is doing a job
+  → needs structured feedback from a group
+  → creates survey from JSON schema
+  → shares /s/{id} URL with respondents
+  → humans respond over hours or days
+  → agent retrieves structured JSON results and acts on them
 ```
 
 ## What is this?
 
-MTS is a minimal API and MCP server for one narrow job: ask humans questions and get machine-usable answers back.
+MTS is a minimal API and MCP server for one narrow job: let agents collect structured feedback from groups of humans and get machine-usable results back.
 
 It is designed for:
-- AI agents that need human input mid-workflow
-- Developers building agent products that need a lightweight survey primitive
+- AI agents running event management, product launches, or community workflows that need to survey a group
+- Developers building agent products that need a lightweight feedback-collection primitive
 
 It is not designed for:
 - survey dashboards
@@ -30,7 +30,7 @@ It is not designed for:
 
 ## Features
 
-- **Markdown or JSON schema input** — fast for humans, precise for agents
+- **JSON schema input** — structured, precise, and directly machine-generated
 - **MCP server** — create surveys and read results directly from Claude Code
 - **Minimal API surface** — authenticated creator routes, public respondent submission
 - **Four semantic question types** — `choice`, `text`, `scale`, `matrix`
@@ -128,14 +128,14 @@ Add to your Claude Code config (`~/.claude.json`):
 
 Then in Claude Code:
 ```
-> Create a survey from docs/my-survey.md
+> Create a post-event feedback survey with a 1-5 rating, open text, and a yes/no question
 ```
 
 Available tools:
-- `create_survey`
-- `get_results`
-- `list_surveys`
-- `close_survey`
+- `create_survey` — create from JSON schema; optional `max_responses`, `expires_at`, `webhook_url`
+- `get_results` — aggregated results + raw responses
+- `list_surveys` — list surveys owned by your key
+- `close_survey` — close a survey immediately
 
 ### Use the HTTP API
 
@@ -151,7 +151,17 @@ Then create a survey:
 curl -X POST https://www.humansurvey.co/api/surveys \
   -H "Authorization: Bearer mts_sk_..." \
   -H "Content-Type: application/json" \
-  -d '{"markdown": "# My Survey\n\n**Q1. How are you?**\n\n- ☐ Great\n- ☐ OK\n- ☐ Not great"}'
+  -d '{
+    "schema": {
+      "title": "Post-Event Feedback",
+      "sections": [{
+        "questions": [
+          { "type": "scale", "label": "How would you rate the event?", "min": 1, "max": 5 },
+          { "type": "text", "label": "What should we improve?" }
+        ]
+      }]
+    }
+  }'
 ```
 
 Response:
