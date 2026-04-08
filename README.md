@@ -1,5 +1,7 @@
 # HumanSurvey
 
+[![human-survey MCP server](https://glama.ai/mcp/servers/sunsiyuan/human-survey/badges/card.svg)](https://glama.ai/mcp/servers/sunsiyuan/human-survey)
+
 Feedback collection infrastructure for AI agents.
 
 HumanSurvey lets an agent doing long-horizon work collect structured feedback from a group of people:
