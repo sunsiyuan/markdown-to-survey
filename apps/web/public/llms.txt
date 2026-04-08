@@ -17,7 +17,7 @@ An agent working on a long-horizon task sends a JSON schema to the HumanSurvey A
 ## Typical agent workflow
 
 ```
-1. POST /api/keys                         → save hs_sk_... key (one-time setup)
+1. If no API key: call create_key MCP tool (or POST /api/keys) → save hs_sk_...
 2. POST /api/surveys  { schema: {...} }   → get /s/{id} URL + survey_id
 3. share /s/{id} with the target group (email, Slack, etc.)
 4. GET  /api/surveys/{id}/responses       → check results; repeat over hours or days
@@ -41,7 +41,9 @@ Add to `~/.claude.json`:
 }
 ```
 
-Tools: `create_survey`, `get_results`, `list_surveys`, `close_survey`
+`HUMANSURVEY_API_KEY` is optional — if not set, call `create_key` to self-provision one.
+
+Tools: `create_key`, `create_survey`, `get_results`, `list_surveys`, `close_survey`
 
 ## API Quick Start
 
@@ -50,9 +52,15 @@ Get an API key (no auth needed):
 ```bash
 curl -X POST https://www.humansurvey.co/api/keys \
   -H "Content-Type: application/json" \
-  -d '{"name":"my-agent"}'
+  -d '{
+    "name": "my-agent",
+    "email": "you@example.com",
+    "wallet_address": "eip155:8453:0xabc..."
+  }'
 # → { "key": "hs_sk_..." }  ← save this
 ```
+
+`email` ties the key to a human owner for future billing. `wallet_address` accepts CAIP-10 format and will be used for agent-native payments (x402 protocol).
 
 Create a survey:
 

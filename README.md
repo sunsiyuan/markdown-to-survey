@@ -134,6 +134,7 @@ Then in Claude Code:
 ```
 
 Available tools:
+- `create_key` — self-provision an API key; no human setup required
 - `create_survey` — create from JSON schema; optional `max_responses`, `expires_at`, `webhook_url`
 - `get_results` — aggregated results + raw responses
 - `list_surveys` — list surveys owned by your key
@@ -144,8 +145,14 @@ Available tools:
 ```bash
 curl -X POST https://www.humansurvey.co/api/keys \
   -H "Content-Type: application/json" \
-  -d '{"name":"my claude agent"}'
+  -d '{
+    "name": "my claude agent",
+    "email": "you@example.com",
+    "wallet_address": "eip155:8453:0xabc..."
+  }'
 ```
+
+All fields optional. `wallet_address` uses [CAIP-10](https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-10.md) format — will be used for agent-native payments in the future.
 
 Then create a survey:
 

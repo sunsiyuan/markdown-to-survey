@@ -9,7 +9,11 @@ export const metadata: Metadata = {
 
 const authSnippet = `curl -X POST https://www.humansurvey.co/api/keys \\
   -H "Content-Type: application/json" \\
-  -d '{"name":"event-agent"}'`
+  -d '{
+    "name": "event-agent",
+    "email": "you@example.com",
+    "wallet_address": "eip155:8453:0xabc..."
+  }'`
 
 const markdownChoiceSnippet = `**Q1. Would you attend a future event?**
 
@@ -170,6 +174,7 @@ const apiRoutes = [
 ]
 
 const mcpTools = [
+  ['create_key', 'Create an API key. Call this first if HUMANSURVEY_API_KEY is not set — agents can self-provision without human setup.'],
   ['create_survey', 'Create a survey from JSON schema and return the respondent URL and survey ID.'],
   ['get_results', 'Fetch aggregated results for a survey by survey_id.'],
   ['list_surveys', 'List surveys owned by the configured API key.'],
@@ -269,8 +274,13 @@ export default function DocsPage() {
               <p>
                 Creator routes use bearer authentication with keys shaped like <code>hs_sk_...</code>.
                 The raw key is only returned once when you call <code>POST /api/keys</code>.
+                MCP agents can call <code>create_key</code> directly — no human setup required.
               </p>
               <CodeBlock code={authSnippet} />
+              <p>
+                All fields are optional. <code>email</code> ties the key to a human owner for future billing.{' '}
+                <code>wallet_address</code> accepts <a href="https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-10.md" target="_blank" rel="noreferrer" className="underline">CAIP-10</a> format (e.g. <code>eip155:8453:0x...</code> for Base) and will be used for agent-native payments.
+              </p>
               <p>
                 Pass the key on authenticated requests:
                 <code className="ml-2">Authorization: Bearer hs_sk_...</code>

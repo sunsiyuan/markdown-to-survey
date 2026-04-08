@@ -41,7 +41,7 @@ export default function Home() {
         {/* Hero */}
         <section className="max-w-2xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-            Feedback collection for AI agents
+            Open source · MCP · REST API
           </p>
           <h1 className="mt-4 text-[2.2rem] font-semibold leading-[1.15] tracking-[-0.04em] text-slate-950 sm:text-[3.5rem] sm:leading-[1.0] sm:tracking-[-0.05em]">
             Collect structured input{' '}
