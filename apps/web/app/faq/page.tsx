@@ -5,7 +5,10 @@ export const metadata: Metadata = {
   title: 'FAQ — HumanSurvey',
   description:
     'How to have your AI run a survey for your community, customers, or attendees — plus how HumanSurvey compares to Typeform, Google Forms, and SurveyMonkey when the consumer is an agent.',
-  alternates: { canonical: '/faq' },
+  alternates: {
+    canonical: '/faq',
+    types: { 'text/markdown': '/faq.md' },
+  },
 }
 
 type Faq = {
@@ -150,6 +153,15 @@ export default function FaqPage() {
               full docs
             </Link>
             .
+          </p>
+          <p className="text-sm leading-6 text-slate-700">
+            <a
+              href="/faq.md"
+              className="underline underline-offset-2 hover:text-slate-950"
+            >
+              View this page as markdown
+            </a>{' '}
+            — for agent context / LLM readers.
           </p>
         </section>
       </div>

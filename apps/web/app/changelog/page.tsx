@@ -18,6 +18,18 @@ type Entry = {
 const entries: Entry[] = [
   {
     date: '2026-04-20',
+    title: 'Topical cluster completion + markdown twins + Organization graph',
+    items: [
+      'Added two long-form use-case walkthroughs: /use-cases/product-launch (indie maker / PM) and /use-cases/events (conference / meetup organizer).',
+      'Each use-case page has an Article JSON-LD node with a dated worked example (schema in → synthesis out).',
+      'Shipped markdown twins at /faq.md, /use-cases.md, /use-cases/community-feedback.md, /use-cases/product-launch.md, /use-cases/events.md — served alongside each HTML page for LLM crawlers that prefer markdown.',
+      'Wired content negotiation via Next.js alternates.types so well-behaved agents can request the markdown form of any canonical page.',
+      'Upgraded the site-wide JSON-LD to a @graph with an Organization node (sameAs: GitHub, npm, Glama) and a SoftwareApplication node linked via publisher — stronger entity signal for search and LLM indexes.',
+      'Sitemap now enumerates all HTML routes and .md twin URLs.',
+    ],
+  },
+  {
+    date: '2026-04-20',
     title: 'Landing rewrite + FAQ for external-audience personas',
     items: [
       'Retargeted the landing page to community/brand managers and indie makers — external audiences, not internal teams.',

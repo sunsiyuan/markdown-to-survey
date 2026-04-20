@@ -1,11 +1,22 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import {
+  CodeBlock,
+  Ordered,
+  Quote,
+  Section,
+  Unordered,
+} from '@/components/use-cases/primitives'
+
 export const metadata: Metadata = {
   title: 'Community feedback with AI — HumanSurvey use case',
   description:
     'How community and brand managers collect structured feedback from members after an AMA, drop, or campaign by telling Claude (or any agent) what they want to learn — no Typeform, no chasing responses, no pivot tables.',
-  alternates: { canonical: '/use-cases/community-feedback' },
+  alternates: {
+    canonical: '/use-cases/community-feedback',
+    types: { 'text/markdown': '/use-cases/community-feedback.md' },
+  },
 }
 
 const articleJsonLd = {
@@ -362,6 +373,16 @@ Suggested next move: schedule an infra-scaling AMA and adopt a
               </Link>{' '}
               — product launches, events
             </li>
+            <li>
+              ·{' '}
+              <a
+                href="/use-cases/community-feedback.md"
+                className="underline underline-offset-2 hover:text-slate-950"
+              >
+                View this page as markdown
+              </a>{' '}
+              — for agent context / LLM readers
+            </li>
           </ul>
         </section>
       </div>
@@ -369,63 +390,3 @@ Suggested next move: schedule an infra-scaling AMA and adopt a
   )
 }
 
-function Section({
-  tag,
-  children,
-}: {
-  tag: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className="space-y-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-        {tag}
-      </p>
-      <div className="space-y-4 text-[15px] leading-7 text-slate-700">{children}</div>
-    </section>
-  )
-}
-
-function Quote({ children }: { children: React.ReactNode }) {
-  return (
-    <blockquote className="rounded-2xl border-l-4 border-[var(--accent)] bg-[var(--surface)] px-5 py-4 text-[15px] italic leading-7 text-slate-800">
-      {children}
-    </blockquote>
-  )
-}
-
-function CodeBlock({ children }: { children: string }) {
-  return (
-    <pre className="overflow-x-auto rounded-2xl border border-[var(--panel-border)] bg-[var(--code-surface)] px-4 py-4 font-mono text-[12px] leading-5 text-[var(--accent-fg)]">
-      {children}
-    </pre>
-  )
-}
-
-function Ordered({ items }: { items: React.ReactNode[] }) {
-  return (
-    <ol className="space-y-3">
-      {items.map((item, i) => (
-        <li key={i} className="flex gap-3">
-          <span className="mt-[2px] shrink-0 font-mono text-[11px] text-[var(--accent)]">
-            0{i + 1}
-          </span>
-          <span className="text-slate-700">{item}</span>
-        </li>
-      ))}
-    </ol>
-  )
-}
-
-function Unordered({ items }: { items: React.ReactNode[] }) {
-  return (
-    <ul className="space-y-3">
-      {items.map((item, i) => (
-        <li key={i} className="flex gap-2">
-          <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
-          <span className="text-slate-700">{item}</span>
-        </li>
-      ))}
-    </ul>
-  )
-}

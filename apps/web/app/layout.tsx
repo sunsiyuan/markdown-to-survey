@@ -50,17 +50,38 @@ export const metadata: Metadata = {
 
 const structuredData = {
   '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'HumanSurvey',
-  applicationCategory: 'DeveloperApplication',
-  description: 'Feedback collection infrastructure for AI agents',
-  url: 'https://www.humansurvey.co',
-  operatingSystem: 'Web',
-  offers: {
-    '@type': 'Offer',
-    price: '0',
-    priceCurrency: 'USD',
-  },
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://www.humansurvey.co/#org',
+      name: 'HumanSurvey',
+      url: 'https://www.humansurvey.co',
+      logo: 'https://www.humansurvey.co/favicon.ico',
+      foundingDate: '2026-03',
+      description:
+        'Open-source feedback collection infrastructure for AI agents.',
+      sameAs: [
+        'https://github.com/sunsiyuan/human-survey',
+        'https://www.npmjs.com/package/humansurvey-mcp',
+        'https://glama.ai/mcp/servers/sunsiyuan/human-survey',
+      ],
+    },
+    {
+      '@type': 'SoftwareApplication',
+      '@id': 'https://www.humansurvey.co/#app',
+      name: 'HumanSurvey',
+      applicationCategory: 'DeveloperApplication',
+      description: 'Feedback collection infrastructure for AI agents',
+      url: 'https://www.humansurvey.co',
+      operatingSystem: 'Web',
+      publisher: { '@id': 'https://www.humansurvey.co/#org' },
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+      },
+    },
+  ],
 }
 
 export default function RootLayout({

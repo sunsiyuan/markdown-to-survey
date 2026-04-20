@@ -5,7 +5,10 @@ export const metadata: Metadata = {
   title: 'Use cases — HumanSurvey',
   description:
     'Concrete AI-agent feedback-collection workflows: community managers collecting post-AMA input, indie makers running post-launch surveys, event organizers capturing session feedback.',
-  alternates: { canonical: '/use-cases' },
+  alternates: {
+    canonical: '/use-cases',
+    types: { 'text/markdown': '/use-cases.md' },
+  },
 }
 
 const collectionJsonLd = {
@@ -39,16 +42,16 @@ const items: Item[] = [
     headline: 'Post-launch feedback from early users and waitlist',
     body:
       'A week after shipping a new product to 200 beta users, have your agent collect structured feedback: why they signed up, top paper cut, ranked next-feature priorities. Pipe results straight into roadmap issues.',
-    href: null,
-    status: 'soon',
+    href: '/use-cases/product-launch',
+    status: 'live',
   },
   {
     role: 'Event organizer',
     headline: 'Post-event feedback for conferences, meetups, webinars',
     body:
       'Rate sessions in a matrix, collect speaker feedback, capture next-event suggestions. Your agent writes the public retro grounded in real numbers.',
-    href: null,
-    status: 'soon',
+    href: '/use-cases/events',
+    status: 'live',
   },
 ]
 
@@ -98,7 +101,7 @@ export default function UseCasesIndex() {
           </p>
         </section>
 
-        <section className="space-y-4">
+        <section className="space-y-4" id="walkthroughs">
           {items.map((it) => (
             <article
               key={it.role}
@@ -128,6 +131,18 @@ export default function UseCasesIndex() {
               ) : null}
             </article>
           ))}
+        </section>
+
+        <section className="space-y-3 border-t border-[var(--panel-border)] pt-8">
+          <p className="text-sm leading-6 text-slate-700">
+            <a
+              href="/use-cases.md"
+              className="underline underline-offset-2 hover:text-slate-950"
+            >
+              View this page as markdown
+            </a>{' '}
+            — for agent context / LLM readers.
+          </p>
         </section>
       </div>
     </main>
