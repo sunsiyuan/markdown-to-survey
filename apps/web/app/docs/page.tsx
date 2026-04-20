@@ -236,6 +236,12 @@ export default function DocsPage() {
               llms.txt
             </a>
             <Link
+              href="/faq"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 px-5 py-3 font-semibold whitespace-nowrap text-slate-700 transition hover:border-slate-900 hover:text-slate-950"
+            >
+              FAQ
+            </Link>
+            <Link
               href="/"
               className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 px-5 py-3 font-semibold whitespace-nowrap text-slate-700 transition hover:border-slate-900 hover:text-slate-950"
             >

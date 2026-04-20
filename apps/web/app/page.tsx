@@ -1,11 +1,15 @@
 import Link from 'next/link'
 
+import { Story } from '@/components/home/Story'
 import { TryItPanel } from '@/components/home/TryItPanel'
+import { UseCases } from '@/components/home/UseCases'
+import { WhenToUse } from '@/components/home/WhenToUse'
 
 const links = [
   ['GitHub', 'https://github.com/sunsiyuan/human-survey'],
   ['npm: humansurvey-mcp', 'https://www.npmjs.com/package/humansurvey-mcp'],
   ['Docs', '/docs'],
+  ['FAQ', '/faq'],
   ['OpenAPI', '/api/openapi.json'],
   ['llms.txt', '/llms.txt'],
 ]
@@ -18,9 +22,15 @@ export default function Home() {
         {/* Header */}
         <header className="flex items-center justify-between">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--accent-strong)]">
-            Feedback collection for AI agents
+            Feedback collection, AI-native
           </p>
           <div className="flex gap-2">
+            <Link
+              href="/faq"
+              className="inline-flex min-h-9 items-center justify-center rounded-full border border-black/10 px-4 text-sm font-medium text-slate-700 transition hover:border-slate-900 hover:text-slate-950"
+            >
+              FAQ
+            </Link>
             <Link
               href="/docs"
               className="inline-flex min-h-9 items-center justify-center rounded-full border border-black/10 px-4 text-sm font-medium text-slate-700 transition hover:border-slate-900 hover:text-slate-950"
@@ -39,20 +49,20 @@ export default function Home() {
         </header>
 
         {/* Hero */}
-        <section className="max-w-2xl">
+        <section className="max-w-3xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-            Open source · MCP · REST API
+            For community managers, brand teams, indie makers
           </p>
           <h1 className="mt-4 text-[2.2rem] font-semibold leading-[1.15] tracking-[-0.04em] text-slate-950 sm:text-[3.5rem] sm:leading-[1.0] sm:tracking-[-0.05em]">
-            Collect structured input{' '}
+            Ask your audience anything.{' '}
             <br className="hidden sm:block" />
-            from many humans.{' '}
-            <br className="hidden sm:block" />
-            Let agents use it.
+            Let your AI run the loop.
           </h1>
-          <p className="mt-6 text-base leading-7 text-slate-700 sm:text-lg sm:leading-8">
-            Agents send a schema, respondents fill out a hosted survey, agents
-            get clean structured JSON back — at any scale, via REST API or MCP.
+          <p className="mt-6 max-w-2xl text-base leading-7 text-slate-700 sm:text-lg sm:leading-8">
+            Stop building forms. Tell Claude (or any agent) what you want to
+            learn from your members, customers, or event attendees — it designs
+            the survey, hands you a share link, and reports back once responses
+            land.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a
@@ -61,14 +71,29 @@ export default function Home() {
             >
               Try it
             </a>
+            <a
+              href="#use-cases"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-900 px-5 text-sm font-semibold text-slate-950 transition hover:bg-slate-950 hover:text-white"
+            >
+              See use cases
+            </a>
             <Link
               href="/docs"
-              className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-900 px-5 text-sm font-semibold text-slate-950 transition hover:bg-slate-950 hover:text-white"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-950"
             >
               Docs
             </Link>
           </div>
         </section>
+
+        {/* Story */}
+        <Story />
+
+        {/* Use cases */}
+        <UseCases />
+
+        {/* Fit signal */}
+        <WhenToUse />
 
         {/* Demo */}
         <section id="try-it">

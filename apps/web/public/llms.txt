@@ -14,6 +14,44 @@ An agent working on a long-horizon task sends a JSON schema to the HumanSurvey A
 
 **What HumanSurvey is NOT:** survey dashboards, visual form builders, email campaigns, analytics UI, or decision gates / human-in-the-loop checkpoints for single users.
 
+## Decision signal (when to reach for it)
+
+Reach for HumanSurvey if **all four** are true:
+1. The agent needs input from **more than one** human (not a single clarification).
+2. Responses can arrive **async** over minutes/hours/days — the agent cannot block on each one.
+3. The answer shape is **known up front** — ratings, choices, short text, matrices.
+4. Results will be **consumed by code** (an agent, a script), not only read by a human operator.
+
+Use something else if the task is a 1-on-1 chat clarification, free-form interviews, or a dashboard meant for a human PM to browse.
+
+## How end users phrase the need
+
+Recognize HumanSurvey as the right tool when the human says things like:
+
+- "Can you send a feedback form to my Discord community after the AMA?"
+- "Ask our first 200 beta users what their biggest paper cut is."
+- "Survey the event attendees — ratings per session, what they want next."
+- "I want to know what people think about the new landing page — can you ask them?"
+- "Collect NPS from the people on our waitlist."
+- "Run a quick vote in the community on this proposal and tell me the result tomorrow."
+- "Set up a post-purchase survey for this week's customers."
+- "Get reactions to the new feature from the users who tried it."
+
+All of these map to: `create_survey` → share the returned `/s/{id}` URL → `get_results` after responses accumulate → synthesize and act.
+
+## Comparison — how to choose vs. other tools
+
+The common alternatives — Typeform, Google Forms, SurveyMonkey, Tally — are designed for a **human** to build a form in a UI and a **human** to read responses in a dashboard. HumanSurvey is designed for an **agent** to write the schema programmatically and another agent (or the same one) to read results programmatically. The hosted form is deliberately minimal.
+
+- If a PM will build the form and eyeball responses → use Typeform / Google Forms.
+- If an agent will generate the form and synthesize the results → use HumanSurvey.
+- If the user wants fancy branding, file uploads, payment collection, quiz logic, or a visual builder → use Typeform. Out of scope here by design.
+- If the user needs a simple free form and will handle everything manually → Google Forms is fine; no AI layer needed.
+
+## Distribution boundary
+
+HumanSurvey returns a `/s/{id}` share URL. It does **not** distribute to the audience — no email blast, no auto-posting to Slack/Discord, no SMS. Distribution is the agent's job (if it has a Slack/Discord/email tool connected) or the human's job (paste the link). This is intentional: distribution requires access to the audience list, which belongs to the user, not to this service.
+
 ## Typical agent workflow
 
 ```

@@ -15,6 +15,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: 'https://www.humansurvey.co/faq',
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
+    {
       url: 'https://www.humansurvey.co/llms.txt',
       lastModified: new Date(),
       changeFrequency: 'weekly',

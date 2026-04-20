@@ -764,3 +764,21 @@ After MVP ships, TASKS.md becomes a roadmap. Each item gets a GitHub Issue.
 - [ ] Custom domains
 - [ ] Webhooks on new response
 - [ ] Survey templates
+
+## Parked — Response-rate layer
+
+Distribution hypothesis: a meaningful chunk of agent outcomes depend on completion rate, not just schema correctness. Before building anything here, measure first.
+
+### Step 1 — Funnel instrumentation (do this first)
+- [ ] Record `opened` (first GET of `/s/{id}`), `started` (first answer change), `submitted` events per survey
+- [ ] Surface a funnel in `get_results` / `GET /api/surveys/:id/responses` so agents (and we) can see where drop-off happens
+- [ ] Decide next step only after ~50 real surveys of data: is the leak at share → open, open → start, or start → submit?
+
+### Step 2 — Tiered UI customization (gated on Step 1 findings)
+Only pursue the tier that addresses the observed leak. Keep the "semantic input, hosted rendering" contract — agents never write HTML/CSS.
+
+- [ ] **Tier A — `theme` param** on `create_survey`: a few curated presets (`minimal`, `branded`, `playful`). Zero surface-area growth.
+- [ ] **Tier B — `brand` object**: `{ logo, primary_color, welcome_message, thank_you_message }`. Agent-native, still semantic.
+- [ ] **Tier C — plugin / custom component surface**: only if A+B measurably fail. Heavy commitment (sandbox, versioning, security).
+
+**Why parked:** the product principle "narrow scope wins" makes Tier C a scope risk. A/B are in-scope because they still serve the agent's goal (higher completion → better agent outcome), not the human operator's aesthetic preferences.
