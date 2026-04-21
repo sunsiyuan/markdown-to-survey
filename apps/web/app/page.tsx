@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
+import { InstallPanel } from '@/components/home/InstallPanel'
 import { Story } from '@/components/home/Story'
-import { TryItPanel } from '@/components/home/TryItPanel'
 import { UseCases } from '@/components/home/UseCases'
 import { WhenToUse } from '@/components/home/WhenToUse'
 
@@ -74,10 +74,10 @@ export default function Home() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a
-              href="#try-it"
+              href="#install"
               className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
-              Try it
+              Add to Claude Code
             </a>
             <a
               href="#use-cases"
@@ -103,12 +103,12 @@ export default function Home() {
         {/* Fit signal */}
         <WhenToUse />
 
-        {/* Demo */}
-        <section id="try-it">
+        {/* Install */}
+        <section id="install">
           <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-            Try it
+            Get started
           </p>
-          <TryItPanel />
+          <InstallPanel />
         </section>
 
         {/* Footer links */}
