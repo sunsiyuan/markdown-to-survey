@@ -181,7 +181,8 @@ function QuestionBody({
     return (
       <textarea
         ref={firstInputRef}
-        className="min-h-[7rem] w-full resize-none border-0 border-b border-[var(--panel-border)] bg-transparent pb-3 text-lg leading-[1.6] text-slate-950 outline-none transition focus:border-[var(--accent-strong)]"
+        rows={1}
+        className="w-full min-h-12 resize-none border-0 border-b border-[var(--panel-border)] bg-transparent pb-2 text-lg leading-[1.6] text-slate-950 outline-none transition focus:border-[var(--accent-strong)] [field-sizing:content]"
         placeholder="Type your answer here…"
         value={typeof value === 'string' ? value : ''}
         onChange={(event) => onChange(event.target.value)}
