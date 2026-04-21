@@ -68,7 +68,6 @@ type ResultsQuestion =
     }
 
 const API_BASE_URL = process.env.HUMANSURVEY_API_URL ?? 'https://www.humansurvey.co'
-const API_KEY = process.env.HUMANSURVEY_API_KEY
 
 const server = new McpServer({
   name: 'humansurvey-mcp',
@@ -116,11 +115,13 @@ server.registerTool(
       }
     }
 
+    process.env.HUMANSURVEY_API_KEY = payload.key
+
     return {
       content: [
         {
           type: 'text',
-          text: `API key created!\n\nKey: ${payload.key}\n\nSave this as HUMANSURVEY_API_KEY in your MCP config — it cannot be retrieved again.`,
+          text: `API key created!\n\nKey: ${payload.key}\n\nThis key is now active for this session. Save it as HUMANSURVEY_API_KEY in your MCP config so it persists across restarts — it cannot be retrieved again.`,
         },
       ],
     }
@@ -166,7 +167,7 @@ server.registerTool(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${API_KEY}`,
+        Authorization: `Bearer ${process.env.HUMANSURVEY_API_KEY}`,
       },
       body: JSON.stringify({ schema, max_responses, expires_at, webhook_url }),
     })
@@ -243,7 +244,7 @@ server.registerTool(
       `${API_BASE_URL}/api/surveys/${encodeURIComponent(surveyId)}/responses`,
       {
         headers: {
-          Authorization: `Bearer ${API_KEY}`,
+          Authorization: `Bearer ${process.env.HUMANSURVEY_API_KEY}`,
         },
       },
     )
@@ -302,7 +303,7 @@ server.registerTool(
 
     const response = await fetch(`${API_BASE_URL}/api/surveys`, {
       headers: {
-        Authorization: `Bearer ${API_KEY}`,
+        Authorization: `Bearer ${process.env.HUMANSURVEY_API_KEY}`,
       },
     })
     const payload = (await response.json().catch(() => null)) as
@@ -395,7 +396,7 @@ server.registerTool(
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${API_KEY}`,
+        Authorization: `Bearer ${process.env.HUMANSURVEY_API_KEY}`,
       },
       body: JSON.stringify({ status: 'closed' }),
     })
@@ -419,7 +420,7 @@ server.registerTool(
       `${API_BASE_URL}/api/surveys/${encodeURIComponent(surveyId)}/responses`,
       {
         headers: {
-          Authorization: `Bearer ${API_KEY}`,
+          Authorization: `Bearer ${process.env.HUMANSURVEY_API_KEY}`,
         },
       },
     )
@@ -452,7 +453,7 @@ server.registerTool(
 await server.connect(new StdioServerTransport())
 
 function requireApiKey() {
-  if (API_KEY) {
+  if (process.env.HUMANSURVEY_API_KEY) {
     return null
   }
 
@@ -460,7 +461,7 @@ function requireApiKey() {
     content: [
       {
         type: 'text' as const,
-        text: 'HUMANSURVEY_API_KEY is not set. Call create_key to get one, then save it as HUMANSURVEY_API_KEY in your MCP config.',
+        text: 'No API key found. Call the create_key tool first — it takes no arguments and will provision a key immediately. The key will be active for this session and you can then proceed with create_survey.',
       },
     ],
     isError: true,
