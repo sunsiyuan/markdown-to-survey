@@ -174,6 +174,23 @@ function validateSurveyInput(input: SurveyInput, survey: Survey) {
       }
 
       if (
+        (question.type === 'single_choice' || question.type === 'multi_choice') &&
+        Array.isArray(question.options)
+      ) {
+        question.options.forEach((option, optionIndex) => {
+          const label =
+            typeof option === 'string'
+              ? option
+              : (option as { label?: string }).label
+          if (!label?.trim()) {
+            errors.push(
+              `${path}.options[${optionIndex}].label is required — each option must be { label: "..." } or a plain string`,
+            )
+          }
+        })
+      }
+
+      if (
         question.type === 'matrix' &&
         (!Array.isArray(question.rows) ||
           question.rows.length === 0 ||
@@ -260,12 +277,15 @@ function buildQuestion(question: QuestionInput, questionIndex: number): Question
 }
 
 function buildOption(
-  option: { label: string; hasTextInput?: boolean },
+  option: { label?: string; hasTextInput?: boolean } | string,
   index: number,
 ): Option {
+  if (typeof option === 'string') {
+    return { id: `opt_${index}`, label: option.trim() }
+  }
   return {
     id: `opt_${index}`,
-    label: option.label.trim(),
+    label: (option.label ?? '').trim(),
     hasTextInput: option.hasTextInput,
   }
 }
