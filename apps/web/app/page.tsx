@@ -94,6 +94,14 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Install */}
+        <section id="install">
+          <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
+            Get started
+          </p>
+          <InstallPanel />
+        </section>
+
         {/* Story */}
         <Story />
 
@@ -102,14 +110,6 @@ export default function Home() {
 
         {/* Fit signal */}
         <WhenToUse />
-
-        {/* Install */}
-        <section id="install">
-          <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-            Get started
-          </p>
-          <InstallPanel />
-        </section>
 
         {/* Footer links */}
         <footer className="flex flex-wrap gap-3 border-t border-[var(--panel-border)] pt-8">
