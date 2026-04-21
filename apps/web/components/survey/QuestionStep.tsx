@@ -232,60 +232,90 @@ function QuestionBody({
       Array.isArray(value) ? value : typeof value === 'string' && value ? [value] : [],
     )
 
+    function selectCell(rowId: string, optionId: string) {
+      onChange(
+        buildMatrixSelections(Array.isArray(value) ? value : [], rowId, optionId),
+      )
+    }
+
     return (
-      <div className="overflow-x-auto rounded-2xl border border-[var(--panel-border)] bg-[var(--surface)]">
-        <table className="min-w-full border-collapse text-left text-sm text-slate-800">
-          <thead>
-            <tr className="border-b border-[var(--panel-border)]">
-              <th className="px-4 py-3 font-semibold text-slate-950">Item</th>
-              {matrixOptions.map((option) => (
-                <th
-                  key={option.id}
-                  className="px-4 py-3 text-center font-semibold text-slate-950"
-                >
-                  {option.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {(question.rows ?? []).map((row) => (
-              <tr
-                key={row.id}
-                className="border-b border-[var(--panel-border)] last:border-b-0"
-              >
-                <td className="px-4 py-4 align-top">
-                  <p className="font-medium text-slate-950">{row.label}</p>
-                </td>
+      <>
+        <div className="space-y-3 sm:hidden">
+          {(question.rows ?? []).map((row) => (
+            <div
+              key={row.id}
+              className="rounded-2xl border border-[var(--panel-border)] bg-[var(--surface)] p-4"
+            >
+              <p className="font-medium text-slate-950">{row.label}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
                 {matrixOptions.map((option) => {
                   const checked = matrixSelections[row.id] === option.id
                   return (
-                    <td key={option.id} className="px-4 py-4 text-center">
-                      <label className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[var(--panel-border)] bg-white transition hover:border-[var(--accent)]">
-                        <input
-                          type="radio"
-                          className="h-4 w-4 accent-[var(--accent-strong)]"
-                          name={`${question.id}-${row.id}`}
-                          checked={checked}
-                          onChange={() =>
-                            onChange(
-                              buildMatrixSelections(
-                                Array.isArray(value) ? value : [],
-                                row.id,
-                                option.id,
-                              ),
-                            )
-                          }
-                        />
-                      </label>
-                    </td>
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => selectCell(row.id, option.id)}
+                      className={`flex h-11 min-w-11 items-center justify-center rounded-full border px-3 text-sm font-medium transition ${
+                        checked
+                          ? 'border-[var(--accent-strong)] bg-[var(--accent-strong)] text-white'
+                          : 'border-[var(--panel-border)] bg-white text-slate-700 hover:border-[var(--accent)]'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
                   )
                 })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden rounded-2xl border border-[var(--panel-border)] bg-[var(--surface)] sm:block">
+          <table className="min-w-full border-collapse text-left text-sm text-slate-800">
+            <thead>
+              <tr className="border-b border-[var(--panel-border)]">
+                <th className="px-4 py-3 font-semibold text-slate-950">Item</th>
+                {matrixOptions.map((option) => (
+                  <th
+                    key={option.id}
+                    className="px-4 py-3 text-center font-semibold text-slate-950"
+                  >
+                    {option.label}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {(question.rows ?? []).map((row) => (
+                <tr
+                  key={row.id}
+                  className="border-b border-[var(--panel-border)] last:border-b-0"
+                >
+                  <td className="px-4 py-4 align-top">
+                    <p className="font-medium text-slate-950">{row.label}</p>
+                  </td>
+                  {matrixOptions.map((option) => {
+                    const checked = matrixSelections[row.id] === option.id
+                    return (
+                      <td key={option.id} className="px-4 py-4 text-center">
+                        <label className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[var(--panel-border)] bg-white transition hover:border-[var(--accent)]">
+                          <input
+                            type="radio"
+                            className="h-4 w-4 accent-[var(--accent-strong)]"
+                            name={`${question.id}-${row.id}`}
+                            checked={checked}
+                            onChange={() => selectCell(row.id, option.id)}
+                          />
+                        </label>
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
     )
   }
 
