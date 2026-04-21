@@ -91,7 +91,7 @@ export default function UseCasesIndex() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
             Use cases
           </p>
-          <h1 className="text-4xl font-normal tracking-[-0.015em] text-slate-950 sm:text-5xl">
+          <h1 className="text-4xl tracking-[-0.02em] text-slate-950 sm:text-5xl">
             Whoever needs to hear from a crowd outside their company.
           </h1>
           <p className="text-base leading-[1.7] text-slate-800">

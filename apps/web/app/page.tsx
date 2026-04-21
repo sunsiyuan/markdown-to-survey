@@ -61,7 +61,7 @@ export default function Home() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
             For community managers, brand teams, indie makers
           </p>
-          <h1 className="mt-4 text-[2.4rem] font-normal leading-[1.1] tracking-[-0.015em] text-slate-950 sm:text-[3.75rem] sm:leading-[1.02] sm:tracking-[-0.02em]">
+          <h1 className="mt-4 text-[2.4rem] leading-[1.1] tracking-[-0.02em] text-slate-950 sm:text-[3.75rem] sm:leading-[1.02] sm:tracking-[-0.025em]">
             Ask your audience anything.{' '}
             <br className="hidden sm:block" />
             Let your AI run the loop.

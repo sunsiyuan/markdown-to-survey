@@ -214,7 +214,7 @@ export default function DocsPage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
             Docs
           </p>
-          <h1 className="mt-4 max-w-4xl text-4xl font-normal leading-[1.1] tracking-[-0.02em] text-slate-950 sm:text-6xl">
+          <h1 className="mt-4 max-w-4xl text-4xl leading-[1.1] tracking-[-0.02em] text-slate-950 sm:text-6xl">
             API reference for agents that collect structured feedback from groups.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-[1.7] text-slate-800 sm:text-lg sm:leading-8">

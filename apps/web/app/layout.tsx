@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { IBM_Plex_Mono, Inter, Instrument_Serif } from 'next/font/google'
+import { Fraunces, IBM_Plex_Mono, Inter } from 'next/font/google'
 
 import './globals.css'
 
@@ -8,9 +8,10 @@ const inter = Inter({
   variable: '--font-sans',
 })
 
-const instrumentSerif = Instrument_Serif({
+const fraunces = Fraunces({
   subsets: ['latin'],
-  weight: ['400'],
+  axes: ['opsz', 'SOFT'],
+  weight: ['400', '500', '600'],
   style: ['normal', 'italic'],
   variable: '--font-serif',
 })
@@ -97,7 +98,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${instrumentSerif.variable} ${plexMono.variable} h-full`}>
+    <html lang="en" className={`${inter.variable} ${fraunces.variable} ${plexMono.variable} h-full`}>
       <body className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
         <script
           type="application/ld+json"

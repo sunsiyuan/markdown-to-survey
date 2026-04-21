@@ -114,7 +114,7 @@ export default function ChangelogPage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
             Changelog
           </p>
-          <h1 className="text-4xl font-normal tracking-[-0.015em] text-slate-950 sm:text-5xl">
+          <h1 className="text-4xl tracking-[-0.02em] text-slate-950 sm:text-5xl">
             What&apos;s shipped.
           </h1>
           <p className="text-base leading-[1.7] text-slate-800">
