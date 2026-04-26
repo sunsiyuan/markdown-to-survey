@@ -9,10 +9,14 @@ import { sql, parseJsonValue } from '@/lib/db'
 
 type PageProps = {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ embed?: string }>
 }
 
-export default async function SurveyPage({ params }: PageProps) {
+export default async function SurveyPage({ params, searchParams }: PageProps) {
   const { id } = await params
+  const { embed } = await searchParams
+  const embedded = embed === '1'
+
   const rows = (await sql`
     SELECT id, title, schema, status, response_count, max_responses, expires_at
     FROM surveys
@@ -35,8 +39,14 @@ export default async function SurveyPage({ params }: PageProps) {
   }
 
   if (isSurveyClosed(data)) {
-    return <SurveyClosed title={data.title} />
+    return <SurveyClosed title={data.title} embedded={embedded} />
   }
 
-  return <SurveyForm surveyId={data.id} survey={parseJsonValue<Survey>(data.schema)} />
+  return (
+    <SurveyForm
+      surveyId={data.id}
+      survey={parseJsonValue<Survey>(data.schema)}
+      embedded={embedded}
+    />
+  )
 }

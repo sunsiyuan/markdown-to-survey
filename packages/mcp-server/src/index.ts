@@ -262,7 +262,10 @@ server.registerTool(
       'Common cases: post-event attendee feedback, product satisfaction after a launch, team health checks, customer ratings after support resolution. ' +
       'The schema parameter is fully typed — follow the field types rather than guessing. ' +
       'Returns a survey_url to share with respondents and a survey_id to pass to get_results later. ' +
-      'The survey accepts responses immediately and stays open until you close it or it expires.',
+      'The survey accepts responses immediately and stays open until you close it or it expires. ' +
+      'Embedding: append "?embed=1" to the returned survey_url to render inside an <iframe> on any host site (onboarding/lead-capture flows). ' +
+      'The embedded form posts events to window.parent with source: "humansurvey" — type "loaded", "resize" (with height), and "submitted" (with responseId and answers). ' +
+      'See https://www.humansurvey.co/llms.txt for the full embed contract.',
     inputSchema: {
       schema: SurveyInputSchema.describe(
         'Survey definition. Each question is a discriminated union keyed by type: single_choice, multi_choice, text, scale, or matrix. Use the typed fields below — do not send free-form JSON.',

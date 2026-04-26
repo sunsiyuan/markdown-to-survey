@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { Question, Survey } from '@/lib/survey'
 
@@ -12,6 +12,7 @@ import { WelcomeStep } from './WelcomeStep'
 type SurveyFormProps = {
   surveyId: string
   survey: Survey
+  embedded?: boolean
 }
 
 type AnswerValue = string | string[] | number | undefined
@@ -22,7 +23,7 @@ type Stage =
   | { kind: 'question'; id: string }
   | { kind: 'submitted' }
 
-export function SurveyForm({ surveyId, survey }: SurveyFormProps) {
+export function SurveyForm({ surveyId, survey, embedded = false }: SurveyFormProps) {
   const allQuestions = survey.sections.flatMap((section) => section.questions)
 
   const [answers, setAnswers] = useState<AnswerMap>({})
@@ -30,6 +31,31 @@ export function SurveyForm({ surveyId, survey }: SurveyFormProps) {
   const [stage, setStage] = useState<Stage>({ kind: 'welcome' })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!embedded) return
+    window.parent.postMessage(
+      { source: 'humansurvey', type: 'loaded', surveyId },
+      '*',
+    )
+  }, [embedded, surveyId])
+
+  useEffect(() => {
+    if (!embedded) return
+    const node = rootRef.current
+    if (!node) return
+    const post = () => {
+      window.parent.postMessage(
+        { source: 'humansurvey', type: 'resize', surveyId, height: node.offsetHeight },
+        '*',
+      )
+    }
+    post()
+    const observer = new ResizeObserver(post)
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [embedded, surveyId])
 
   const visibleQuestions = allQuestions.filter((question) =>
     isVisible(question, allQuestions, answers),
@@ -98,14 +124,27 @@ export function SurveyForm({ surveyId, survey }: SurveyFormProps) {
       if (!response.ok) {
         throw new Error('Submission failed')
       }
+      const { id: responseId } = (await response.json()) as { id: string }
       window.localStorage.removeItem(`mts_draft_${surveyId}`)
+      if (embedded) {
+        window.parent.postMessage(
+          {
+            source: 'humansurvey',
+            type: 'submitted',
+            surveyId,
+            responseId,
+            answers,
+          },
+          '*',
+        )
+      }
       setStage({ kind: 'submitted' })
     } catch {
       setError('Submission failed. Please try again.')
     } finally {
       setSubmitting(false)
     }
-  }, [answers, surveyId, visibleQuestions])
+  }, [answers, embedded, surveyId, visibleQuestions])
 
   const start = useCallback(() => {
     if (visibleQuestions.length === 0) return
@@ -161,47 +200,53 @@ export function SurveyForm({ surveyId, survey }: SurveyFormProps) {
   const progress =
     totalRequired === 0 ? 0 : Math.round((answeredRequired / totalRequired) * 100)
 
-  if (stage.kind === 'submitted') {
-    return <ThankYou />
-  }
+  const wrapperClass = embedded
+    ? 'flex flex-col'
+    : 'flex min-h-screen flex-col bg-[var(--page-gradient)]'
 
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--page-gradient)]">
-      <ProgressBar percentage={progress} />
-      {stage.kind === 'welcome' ? (
-        <WelcomeStep
-          survey={survey}
-          questionCount={visibleQuestions.length}
-          onStart={start}
-        />
-      ) : currentQuestion ? (
-        <QuestionStep
-          key={currentQuestion.id}
-          question={currentQuestion}
-          index={visibleIndex}
-          total={visibleQuestions.length}
-          value={answers[currentQuestion.id]}
-          optionTexts={optionTexts[currentQuestion.id] ?? {}}
-          isLast={visibleIndex === visibleQuestions.length - 1}
-          submitting={submitting}
-          error={error}
-          onChange={(value) => {
-            setError(null)
-            setAnswers((current) => ({ ...current, [currentQuestion.id]: value }))
-          }}
-          onOptionTextChange={(optionId, value) =>
-            setOptionTexts((current) => ({
-              ...current,
-              [currentQuestion.id]: {
-                ...(current[currentQuestion.id] ?? {}),
-                [optionId]: value,
-              },
-            }))
-          }
-          onNext={next}
-          onPrev={prev}
-        />
-      ) : null}
+    <div ref={rootRef} className={wrapperClass}>
+      {stage.kind === 'submitted' ? (
+        <ThankYou embedded={embedded} />
+      ) : (
+        <>
+          <ProgressBar percentage={progress} />
+          {stage.kind === 'welcome' ? (
+            <WelcomeStep
+              survey={survey}
+              questionCount={visibleQuestions.length}
+              onStart={start}
+            />
+          ) : currentQuestion ? (
+            <QuestionStep
+              key={currentQuestion.id}
+              question={currentQuestion}
+              index={visibleIndex}
+              total={visibleQuestions.length}
+              value={answers[currentQuestion.id]}
+              optionTexts={optionTexts[currentQuestion.id] ?? {}}
+              isLast={visibleIndex === visibleQuestions.length - 1}
+              submitting={submitting}
+              error={error}
+              onChange={(value) => {
+                setError(null)
+                setAnswers((current) => ({ ...current, [currentQuestion.id]: value }))
+              }}
+              onOptionTextChange={(optionId, value) =>
+                setOptionTexts((current) => ({
+                  ...current,
+                  [currentQuestion.id]: {
+                    ...(current[currentQuestion.id] ?? {}),
+                    [optionId]: value,
+                  },
+                }))
+              }
+              onNext={next}
+              onPrev={prev}
+            />
+          ) : null}
+        </>
+      )}
     </div>
   )
 }

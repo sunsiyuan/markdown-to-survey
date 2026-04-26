@@ -239,6 +239,40 @@ Supported operators:
 { "id": "q_3", "type": "matrix", "label": "...", "rows": [...], "columns": [...], "tally": { "row_0": { "opt_0": 2, "opt_1": 1 } } }
 ```
 
+## Embedding (iframe)
+
+The hosted survey page can be dropped into any third-party site for onboarding / lead-capture flows. Append `?embed=1` to the survey URL to render without the site chrome.
+
+### URL contract
+
+- `https://www.humansurvey.co/s/{id}?embed=1` — renders the form on a transparent, full-width container with no header, footer, or page gradient.
+
+### postMessage events
+
+The iframe posts to `window.parent` with `source: 'humansurvey'` on every event:
+
+- `{ source: 'humansurvey', type: 'loaded',    surveyId }` — fired once on mount.
+- `{ source: 'humansurvey', type: 'resize',    surveyId, height }` — fired whenever content height changes. Hosts use this to auto-size the iframe so there is no inner scrollbar.
+- `{ source: 'humansurvey', type: 'submitted', surveyId, responseId, answers }` — fired after a successful POST to `/api/surveys/{id}/responses`.
+
+There is no `redirect` / `callback` / `message+html` mode — the host JS decides what to do on `submitted` (route the user, hide the iframe, render a custom thank-you, fire analytics, etc.).
+
+### Host snippet
+
+```html
+<iframe id="hs-survey"
+        src="https://www.humansurvey.co/s/abc123?embed=1"
+        style="width:100%; border:0;"></iframe>
+<script>
+  window.addEventListener('message', e => {
+    if (e.data?.source !== 'humansurvey') return
+    const f = document.getElementById('hs-survey')
+    if (e.data.type === 'resize')    f.style.height = e.data.height + 'px'
+    if (e.data.type === 'submitted') console.log('lead:', e.data.responseId, e.data.answers)
+  })
+</script>
+```
+
 ## MCP Tools
 
 ### `create_survey`

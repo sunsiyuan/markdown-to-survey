@@ -1,10 +1,14 @@
 type SurveyClosedProps = {
   title: string
+  embedded?: boolean
 }
 
-export function SurveyClosed({ title }: SurveyClosedProps) {
+export function SurveyClosed({ title, embedded = false }: SurveyClosedProps) {
+  const className = embedded
+    ? 'flex flex-col items-center justify-center px-6 py-10'
+    : 'flex min-h-screen items-center justify-center bg-[var(--page-gradient)] px-6 py-16'
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[var(--page-gradient)] px-6 py-16">
+    <main className={className}>
       <div className="w-full max-w-xl animate-[fadein_.3s_ease-out]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--accent-strong)]">
           Survey closed

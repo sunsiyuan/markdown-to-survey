@@ -122,6 +122,32 @@ curl -X POST https://www.humansurvey.co/api/surveys \
 # → { "survey_url": "https://www.humansurvey.co/s/abc123", "question_count": 2 }
 ```
 
+## Embedding (iframe)
+
+The hosted survey page can be dropped into any third-party site for onboarding / lead-capture flows. Append `?embed=1` to the survey URL to render without the site chrome:
+
+```html
+<iframe id="hs-survey"
+        src="https://www.humansurvey.co/s/abc123?embed=1"
+        style="width:100%; border:0;"></iframe>
+<script>
+  window.addEventListener('message', e => {
+    if (e.data?.source !== 'humansurvey') return
+    const f = document.getElementById('hs-survey')
+    if (e.data.type === 'resize')    f.style.height = e.data.height + 'px'
+    if (e.data.type === 'submitted') console.log('lead:', e.data.responseId, e.data.answers)
+  })
+</script>
+```
+
+The iframe posts three message types to `window.parent`, each with `source: 'humansurvey'`:
+
+- `{ source, type: 'loaded',    surveyId }` — fired on mount
+- `{ source, type: 'resize',    surveyId, height }` — fired whenever content height changes (use to size the iframe)
+- `{ source, type: 'submitted', surveyId, responseId, answers }` — fired after a successful POST to `/api/surveys/{id}/responses`
+
+The host owns whatever happens after `submitted` — redirect, hide the iframe, render their own thank-you, fire analytics, etc.
+
 ## Question Types
 
 - `single_choice` — one selection; requires `options`

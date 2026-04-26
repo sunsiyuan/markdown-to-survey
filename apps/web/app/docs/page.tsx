@@ -128,6 +128,21 @@ const patchSurveySnippet = `curl -X PATCH https://www.humansurvey.co/api/surveys
   -H "Content-Type: application/json" \\
   -d '{"status":"closed"}'`
 
+const embedIframeSnippet = `<iframe id="hs-survey"
+        src="https://www.humansurvey.co/s/abc123?embed=1"
+        style="width:100%; border:0;"></iframe>
+<script>
+  window.addEventListener('message', e => {
+    if (e.data?.source !== 'humansurvey') return
+    const f = document.getElementById('hs-survey')
+    if (e.data.type === 'resize')    f.style.height = e.data.height + 'px'
+    if (e.data.type === 'submitted') {
+      // your code: redirect, hide the iframe, fire analytics, etc.
+      console.log('lead:', e.data.responseId, e.data.answers)
+    }
+  })
+</script>`
+
 const mcpConfigSnippet = `{
   "mcpServers": {
     "survey": {
@@ -266,6 +281,9 @@ export default function DocsPage() {
               <a className="rounded-full border border-[var(--panel-border)] px-3 py-2 whitespace-nowrap text-slate-700 hover:border-slate-900 hover:text-slate-950 lg:block lg:rounded-none lg:border-0 lg:px-0 lg:py-0" href="#api-reference">
                 API Reference
               </a>
+              <a className="rounded-full border border-[var(--panel-border)] px-3 py-2 whitespace-nowrap text-slate-700 hover:border-slate-900 hover:text-slate-950 lg:block lg:rounded-none lg:border-0 lg:px-0 lg:py-0" href="#embed">
+                Embed
+              </a>
               <a className="rounded-full border border-[var(--panel-border)] px-3 py-2 whitespace-nowrap text-slate-700 hover:border-slate-900 hover:text-slate-950 lg:block lg:rounded-none lg:border-0 lg:px-0 lg:py-0" href="#mcp-tools">
                 MCP Tools
               </a>
@@ -363,6 +381,34 @@ export default function DocsPage() {
                   <CodeBlock code={patchSurveySnippet} />
                 </div>
               </div>
+            </Section>
+
+            <Section id="embed" title="Embed">
+              <p>
+                Drop a HumanSurvey form into any third-party page (landing page, onboarding step,
+                in-app form) by appending <code>?embed=1</code> to the survey URL. The iframe
+                renders without the site chrome and emits <code>postMessage</code> events to the
+                host on load, content resize, and submission — the host owns whatever happens
+                after submission.
+              </p>
+              <CodeBlock code={embedIframeSnippet} />
+              <p>
+                Three event types, all with <code>source: &apos;humansurvey&apos;</code>:
+              </p>
+              <ul className="list-disc space-y-2 pl-5">
+                <li>
+                  <code>{`{ type: 'loaded', surveyId }`}</code> — fired once on mount.
+                </li>
+                <li>
+                  <code>{`{ type: 'resize', surveyId, height }`}</code> — fired whenever content
+                  height changes; use to auto-size the iframe so there is no inner scrollbar.
+                </li>
+                <li>
+                  <code>{`{ type: 'submitted', surveyId, responseId, answers }`}</code> — fired
+                  after the response is accepted. Route the user, hide the form, render a
+                  custom thank-you — your call.
+                </li>
+              </ul>
             </Section>
 
             <Section id="mcp-tools" title="MCP Tools">
