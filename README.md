@@ -1,5 +1,7 @@
 # HumanSurvey
 
+**Website:** [humansurvey.co](https://www.humansurvey.co) · **Docs:** [humansurvey.co/docs](https://www.humansurvey.co/docs) · **FAQ:** [humansurvey.co/faq](https://www.humansurvey.co/faq)
+
 [![human-survey MCP server](https://glama.ai/mcp/servers/sunsiyuan/human-survey/badges/card.svg)](https://glama.ai/mcp/servers/sunsiyuan/human-survey)
 
 Feedback collection infrastructure for AI agents.
