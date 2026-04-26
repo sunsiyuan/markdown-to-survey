@@ -4,143 +4,534 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
-    <title>HumanSurvey embed sandbox</title>
+    <title>Tandem — AI pair programmer · closed beta</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
-        font-family:
-          ui-sans-serif,
-          system-ui,
-          -apple-system,
-          'Segoe UI',
-          Roboto,
-          'Helvetica Neue',
-          Arial,
-          sans-serif;
-        color: #0f172a;
+        --bg: #fbf6ee;
+        --bg-deep: #f4ead7;
+        --surface: #ffffff;
+        --ink: #14161d;
+        --ink-soft: #555a66;
+        --line: #e7dec9;
+        --accent: #c2410c;
+        --accent-soft: #fde9c8;
+        --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+        --sans: 'Inter', system-ui, -apple-system, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        font-family: var(--sans);
       }
       body {
-        max-width: 760px;
-        margin: 40px auto;
-        padding: 0 20px 80px;
+        margin: 0;
+        background:
+          radial-gradient(
+            ellipse 1100px 600px at 80% -10%,
+            var(--bg-deep) 0%,
+            var(--bg) 60%
+          )
+          var(--bg);
+        color: var(--ink);
         line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
       }
+      .container {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 28px;
+      }
+
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 26px 0;
+      }
+      .wordmark {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--serif);
+        font-weight: 600;
+        font-size: 22px;
+        letter-spacing: -0.02em;
+      }
+      .wordmark svg {
+        display: block;
+      }
+      .nav-links {
+        display: flex;
+        gap: 28px;
+        font-size: 14px;
+        color: var(--ink-soft);
+      }
+      .nav-links a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.15s;
+      }
+      .nav-links a:hover {
+        color: var(--ink);
+      }
+      .nav-cta {
+        font-size: 13.5px;
+        padding: 8px 16px;
+        background: var(--ink);
+        color: white;
+        border-radius: 999px;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      main {
+        padding: 60px 0 30px;
+      }
+
+      .hero {
+        max-width: 760px;
+      }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 600;
+        padding: 7px 14px;
+        background: var(--accent-soft);
+        border: 1px solid #f3d6a4;
+        border-radius: 100px;
+        margin-bottom: 26px;
+      }
+      .eyebrow::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        background: var(--accent);
+        border-radius: 50%;
+        animation: pulse 1.6s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.45;
+          transform: scale(0.85);
+        }
+      }
+
       h1 {
-        font-size: 1.8rem;
-        margin: 0 0 4px;
+        font-family: var(--serif);
+        font-weight: 500;
+        font-size: clamp(40px, 6.4vw, 72px);
+        line-height: 1.02;
+        letter-spacing: -0.028em;
+        margin: 0 0 22px;
       }
-      p.lede {
-        color: #475569;
-        margin-top: 0;
+      h1 em {
+        font-style: italic;
+        color: var(--accent);
+        font-weight: 500;
       }
-      .row {
+      .lede {
+        font-size: 19px;
+        color: var(--ink-soft);
+        line-height: 1.6;
+        max-width: 620px;
+        margin: 0;
+      }
+
+      .grid {
+        display: grid;
+        gap: 30px;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+        margin-top: 64px;
+        align-items: start;
+      }
+      @media (max-width: 920px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .features {
+        display: grid;
+        gap: 14px;
+      }
+      .feature {
+        padding: 24px 26px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        transition: transform 0.18s ease;
+      }
+      .feature:hover {
+        transform: translateY(-2px);
+      }
+      .feature .num {
+        font-family: var(--serif);
+        font-style: italic;
+        font-weight: 500;
+        font-size: 13px;
+        color: var(--accent);
+        letter-spacing: 0.02em;
+        display: block;
+        margin-bottom: 6px;
+      }
+      .feature h3 {
+        font-family: var(--sans);
+        font-weight: 600;
+        font-size: 16.5px;
+        margin: 0 0 6px;
+        letter-spacing: -0.012em;
+      }
+      .feature p {
+        font-size: 14.5px;
+        color: var(--ink-soft);
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      .form-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow:
+          0 1px 0 rgba(15, 23, 42, 0.04),
+          0 28px 60px -36px rgba(15, 23, 42, 0.18);
+        overflow: hidden;
+      }
+      .form-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 14px;
+        padding: 22px 28px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .form-card-header h2 {
+        font-family: var(--serif);
+        font-weight: 500;
+        font-size: 22px;
+        letter-spacing: -0.018em;
+        margin: 0;
+      }
+      .form-card-header .badge {
+        font-size: 11.5px;
+        color: var(--ink-soft);
+        letter-spacing: 0.04em;
+      }
+      .form-card iframe {
+        width: 100%;
+        border: 0;
+        display: block;
+        background: var(--surface);
+      }
+
+      .form-empty {
+        padding: 38px 28px 32px;
+      }
+      .form-empty p.muted {
+        font-size: 14px;
+        color: var(--ink-soft);
+        margin: 0 0 14px;
+      }
+      .form-empty .row {
         display: flex;
         gap: 8px;
-        align-items: center;
-        margin: 20px 0;
+      }
+      .form-empty input {
+        flex: 1;
+        font: inherit;
+        font-size: 14.5px;
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      .form-empty input:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+        background: var(--surface);
+      }
+      .form-empty button {
+        font: inherit;
+        font-size: 14.5px;
+        padding: 10px 18px;
+        background: var(--ink);
+        color: white;
+        border: 0;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 500;
+      }
+      .form-empty button:hover {
+        background: #2a2e3a;
+      }
+      .form-hint {
+        font-size: 12px;
+        color: var(--ink-soft);
+        margin: 12px 0 0;
+      }
+      .form-hint code {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        background: var(--bg);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+
+      .behind {
+        margin-top: 80px;
+        padding-top: 36px;
+        border-top: 1px solid var(--line);
+      }
+      .behind-head {
+        display: flex;
+        gap: 16px;
+        align-items: baseline;
+        justify-content: space-between;
         flex-wrap: wrap;
       }
-      input,
-      button {
-        font: inherit;
-        padding: 8px 14px;
-        border-radius: 8px;
-        border: 1px solid #cbd5e1;
+      .behind h3 {
+        font-family: var(--serif);
+        font-weight: 500;
+        font-size: 19px;
+        letter-spacing: -0.018em;
+        margin: 0 0 4px;
       }
-      input {
-        flex: 1;
-        min-width: 220px;
-        background: white;
+      .behind p {
+        color: var(--ink-soft);
+        font-size: 14.5px;
+        margin: 0 0 18px;
+        max-width: 720px;
+        line-height: 1.6;
       }
-      button {
-        background: #0f172a;
-        color: white;
-        border-color: #0f172a;
-        cursor: pointer;
-      }
-      button:hover {
-        background: #1e293b;
-      }
-      iframe {
-        width: 100%;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        display: block;
-        margin: 16px 0;
-        background: white;
-      }
-      h3 {
-        margin: 24px 0 8px;
-        font-size: 0.95rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: #64748b;
-      }
-      pre {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 14px;
-        margin: 0;
-        max-height: 320px;
-        overflow: auto;
+      .behind p code {
+        font-family: var(--mono);
         font-size: 12.5px;
-        font-family:
-          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        line-height: 1.55;
+        background: var(--accent-soft);
+        padding: 2px 8px;
+        border-radius: 6px;
+        color: var(--ink);
+      }
+      .log-tag {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--ink-soft);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .log {
+        margin-top: 6px;
+        background: #14161d;
+        color: #d1d5db;
+        border-radius: 14px;
+        padding: 18px 20px;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        line-height: 1.7;
+        max-height: 260px;
+        overflow: auto;
         white-space: pre-wrap;
         word-break: break-word;
       }
-      .log-loaded {
-        color: #1e40af;
+      .log::-webkit-scrollbar {
+        width: 8px;
       }
-      .log-resize {
-        color: #6d28d9;
+      .log::-webkit-scrollbar-thumb {
+        background: #303441;
+        border-radius: 4px;
       }
-      .log-submitted {
-        color: #15803d;
+      .log .log-loaded {
+        color: #93c5fd;
+      }
+      .log .log-resize {
+        color: #c4b5fd;
+      }
+      .log .log-submitted {
+        color: #6ee7b7;
         font-weight: 600;
       }
-      .log-meta {
-        color: #64748b;
+      .log .log-meta {
+        color: #94a3b8;
       }
-      code {
-        background: #f1f5f9;
-        padding: 1px 6px;
-        border-radius: 4px;
-        font-size: 0.92em;
+
+      footer {
+        padding: 40px 0 60px;
+        font-size: 13.5px;
+        color: var(--ink-soft);
+        border-top: 1px solid var(--line);
+        margin-top: 60px;
+        line-height: 1.65;
+      }
+      footer strong {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      footer a {
+        color: var(--ink);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 1px;
+      }
+      footer a:hover {
+        text-decoration-thickness: 2px;
       }
     </style>
   </head>
   <body>
-    <h1>HumanSurvey embed sandbox</h1>
-    <p class="lede">
-      Type a survey ID and embed it with <code>?embed=1</code>. Every
-      <code>postMessage</code> from the iframe is logged below so you can verify
-      the embed contract end-to-end.
-    </p>
+    <div class="container">
+      <nav>
+        <div class="wordmark">
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+            <circle
+              cx="9"
+              cy="13"
+              r="7"
+              stroke="#14161d"
+              stroke-width="1.6"
+            />
+            <circle cx="17" cy="13" r="7" fill="#c2410c" />
+          </svg>
+          Tandem
+        </div>
+        <div class="nav-links">
+          <a href="#">Product</a>
+          <a href="#">Changelog</a>
+          <a href="#">Docs</a>
+          <a href="#beta" class="nav-cta">Apply</a>
+        </div>
+      </nav>
 
-    <div class="row">
-      <input id="sid" placeholder="survey id (e.g. abc123def456)" />
-      <button id="go" type="button">Embed</button>
+      <main>
+        <div class="hero">
+          <span class="eyebrow">Closed beta · 50 teams · May 2026</span>
+          <h1>The pair programmer that thinks <em>two steps ahead</em>.</h1>
+          <p class="lede">
+            Tandem follows your codebase, your specs, and your team — and drafts the
+            next 200 lines while you write the first 20. We're inviting fifty teams
+            to the closed beta this May.
+          </p>
+        </div>
+
+        <div class="grid" id="beta">
+          <div class="features">
+            <div class="feature">
+              <span class="num">No. 01</span>
+              <h3>Knows your repo</h3>
+              <p>
+                Indexes branches, tickets, and design docs so suggestions land where
+                the work actually is — not where the model imagines it should be.
+              </p>
+            </div>
+            <div class="feature">
+              <span class="num">No. 02</span>
+              <h3>Reviews its own diffs</h3>
+              <p>
+                Self-critiques before the PR. Runs the failing test against the
+                proposed patch, not the wishful one.
+              </p>
+            </div>
+            <div class="feature">
+              <span class="num">No. 03</span>
+              <h3>Writes the regression test</h3>
+              <p>
+                For every bug it almost let through, the test that would have caught
+                it ships in the same PR.
+              </p>
+            </div>
+          </div>
+
+          <aside class="form-card">
+            <div class="form-card-header">
+              <h2>Apply for the beta</h2>
+              <span class="badge">~2 minutes</span>
+            </div>
+            <div id="form-mount">
+              <div class="form-empty">
+                <p class="muted">
+                  Paste a HumanSurvey ID to render a real, embedded application form
+                  here. Every keystroke routes through the same iframe + postMessage
+                  contract a real host page would use.
+                </p>
+                <div class="row">
+                  <input id="sid" placeholder="e.g. abc123def456" autocomplete="off" />
+                  <button id="go" type="button">Embed</button>
+                </div>
+                <p class="form-hint">
+                  Or open <code>/embed-test.html?id=&lt;survey_id&gt;</code> to skip
+                  this step.
+                </p>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <section class="behind">
+          <div class="behind-head">
+            <div>
+              <h3>What's actually happening</h3>
+              <p>
+                The application form above is a single
+                <code>&lt;iframe src=".../s/{id}?embed=1"&gt;</code>. As the visitor
+                fills it out, the iframe posts <code>loaded</code>,
+                <code>resize</code>, and <code>submitted</code> events back to this
+                page. No SDK, no build step. The log below is live.
+              </p>
+            </div>
+            <span class="log-tag">postMessage stream</span>
+          </div>
+          <div class="log" id="log">(load a form to start logging)</div>
+        </section>
+      </main>
+
+      <footer>
+        <strong>Tandem is a fictional product</strong> — this page exists to
+        demonstrate how an AI tool launching a closed beta could embed
+        <a href="/">HumanSurvey</a> as the application form.
+        <a href="/docs#embed">Embed docs</a> ·
+        <a href="https://github.com/sunsiyuan/human-survey">Source</a>.
+      </footer>
     </div>
 
-    <iframe id="hs" title="HumanSurvey embedded form" style="display: none"></iframe>
-
-    <h3>postMessage log</h3>
-    <pre id="log">(messages will appear here once you click Embed)</pre>
-
     <script>
-      const sidInput = document.getElementById('sid')
-      const goBtn = document.getElementById('go')
-      const iframe = document.getElementById('hs')
-      const log = document.getElementById('log')
-
       const params = new URLSearchParams(location.search)
       const initialId = params.get('id')
-      if (initialId) sidInput.value = initialId
+      const sidInput = document.getElementById('sid')
+      const goBtn = document.getElementById('go')
+      const formMount = document.getElementById('form-mount')
+      const log = document.getElementById('log')
 
-      function append(line, cls) {
-        if (log.textContent.startsWith('(messages')) log.textContent = ''
+      if (initialId && sidInput) sidInput.value = initialId
+
+      function ts() {
+        const d = new Date()
+        return (
+          d.toTimeString().slice(0, 8) +
+          '.' +
+          String(d.getMilliseconds()).padStart(3, '0')
+        )
+      }
+
+      function appendLog(line, cls) {
+        if (log.textContent.startsWith('(load')) log.textContent = ''
         const span = document.createElement('span')
         if (cls) span.className = cls
         span.textContent = line + '\n'
@@ -148,47 +539,52 @@
         log.scrollTop = log.scrollHeight
       }
 
-      function ts() {
-        const d = new Date()
-        return d.toTimeString().slice(0, 8) + '.' + String(d.getMilliseconds()).padStart(3, '0')
-      }
-
-      function embed() {
-        const id = sidInput.value.trim()
-        if (!id) return
+      function mountIframe(id) {
+        formMount.innerHTML = ''
+        const iframe = document.createElement('iframe')
+        iframe.id = 'hs'
+        iframe.title = 'Beta application form'
+        iframe.src =
+          location.origin + '/s/' + encodeURIComponent(id) + '?embed=1'
+        iframe.style.height = '120px'
+        formMount.appendChild(iframe)
         log.textContent = ''
-        iframe.style.display = 'block'
-        iframe.style.height = '100px'
-        iframe.src = location.origin + '/s/' + encodeURIComponent(id) + '?embed=1'
-        append('[' + ts() + '] iframe.src = /s/' + id + '?embed=1', 'log-meta')
+        appendLog('[' + ts() + '] iframe.src = /s/' + id + '?embed=1', 'log-meta')
       }
 
-      goBtn.addEventListener('click', embed)
-      sidInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') embed()
-      })
-      if (initialId) embed()
+      function tryLoad() {
+        const candidate = sidInput?.value.trim() || initialId || ''
+        if (!candidate) return
+        mountIframe(candidate)
+      }
+
+      if (goBtn) {
+        goBtn.addEventListener('click', tryLoad)
+        sidInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') tryLoad()
+        })
+      }
+      if (initialId) tryLoad()
 
       window.addEventListener('message', (e) => {
         if (e.origin !== location.origin) return
         if (e.data?.source !== 'humansurvey') return
+        const iframe = document.getElementById('hs')
         const { type, surveyId } = e.data
         if (type === 'loaded') {
-          append('[' + ts() + '] loaded surveyId=' + surveyId, 'log-loaded')
+          appendLog('[' + ts() + '] loaded surveyId=' + surveyId, 'log-loaded')
         } else if (type === 'resize') {
-          iframe.style.height = e.data.height + 'px'
-          append('[' + ts() + '] resize height=' + e.data.height + 'px', 'log-resize')
+          if (iframe) iframe.style.height = e.data.height + 'px'
+          appendLog('[' + ts() + '] resize height=' + e.data.height + 'px', 'log-resize')
         } else if (type === 'submitted') {
-          append(
+          appendLog(
             '[' + ts() + '] submitted responseId=' + e.data.responseId,
             'log-submitted',
           )
-          append(
-            '           answers=' + JSON.stringify(e.data.answers, null, 2),
+          appendLog(
+            '           answers = ' + JSON.stringify(e.data.answers, null, 2),
             'log-submitted',
           )
-        } else {
-          append('[' + ts() + '] unknown type=' + type, 'log-meta')
         }
       })
     </script>
