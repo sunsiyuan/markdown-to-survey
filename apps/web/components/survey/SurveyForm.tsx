@@ -45,16 +45,14 @@ export function SurveyForm({ surveyId, survey, embedded = false }: SurveyFormPro
     if (!embedded) return
     const node = rootRef.current
     if (!node) return
-    const post = () => {
+    const observer = new ResizeObserver(() => {
       const height = node.offsetHeight
       if (height === 0) return
       window.parent.postMessage(
         { source: 'humansurvey', type: 'resize', surveyId, height },
         '*',
       )
-    }
-    post()
-    const observer = new ResizeObserver(post)
+    })
     observer.observe(node)
     return () => observer.disconnect()
   }, [embedded, surveyId])

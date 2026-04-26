@@ -132,6 +132,7 @@ The hosted survey page can be dropped into any third-party site for onboarding /
         style="width:100%; border:0;"></iframe>
 <script>
   window.addEventListener('message', e => {
+    if (e.origin !== 'https://www.humansurvey.co') return
     if (e.data?.source !== 'humansurvey') return
     const f = document.getElementById('hs-survey')
     if (e.data.type === 'resize')    f.style.height = e.data.height + 'px'

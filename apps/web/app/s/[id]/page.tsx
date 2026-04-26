@@ -44,7 +44,7 @@ export default async function SurveyPage({ params, searchParams }: PageProps) {
   }
 
   if (isSurveyClosed(data)) {
-    return <SurveyClosed title={data.title} embedded={embedded} />
+    return <SurveyClosed title={data.title} surveyId={data.id} embedded={embedded} />
   }
 
   return (

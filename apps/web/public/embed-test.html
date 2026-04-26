@@ -170,6 +170,7 @@
       if (initialId) embed()
 
       window.addEventListener('message', (e) => {
+        if (e.origin !== location.origin) return
         if (e.data?.source !== 'humansurvey') return
         const { type, surveyId } = e.data
         if (type === 'loaded') {

@@ -265,6 +265,7 @@ There is no `redirect` / `callback` / `message+html` mode — the host JS decide
         style="width:100%; border:0;"></iframe>
 <script>
   window.addEventListener('message', e => {
+    if (e.origin !== 'https://www.humansurvey.co') return
     if (e.data?.source !== 'humansurvey') return
     const f = document.getElementById('hs-survey')
     if (e.data.type === 'resize')    f.style.height = e.data.height + 'px'
