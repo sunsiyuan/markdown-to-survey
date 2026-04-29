@@ -4,6 +4,7 @@ import { sql } from '@/lib/db'
 
 export type CompletionWebhookPayload = {
   event_id: string
+  event: 'survey_closed'
   survey_id: string
   status: 'closed'
   closed_reason: 'manual' | 'max_responses' | 'expired'
@@ -11,7 +12,19 @@ export type CompletionWebhookPayload = {
   closed_at: string
 }
 
-export function fireWebhook(url: string, payload: CompletionWebhookPayload): void {
+export type ThresholdWebhookPayload = {
+  event_id: string
+  event: 'threshold_reached'
+  survey_id: string
+  status: 'open'
+  response_count: number
+  threshold: number
+  fired_at: string
+}
+
+export type WebhookPayload = CompletionWebhookPayload | ThresholdWebhookPayload
+
+export function fireWebhook(url: string, payload: WebhookPayload): void {
   void fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -48,10 +61,44 @@ export async function tryFireCompletionWebhook(
 
   fireWebhook(row.webhook_url, {
     event_id: `evt_${nanoid(12)}`,
+    event: 'survey_closed',
     survey_id: surveyId,
     status: 'closed',
     closed_reason: reason,
     response_count: row.response_count,
     closed_at: new Date().toISOString(),
+  })
+}
+
+// Atomically claim the threshold-webhook fire slot. Same race-proof pattern as the
+// completion variant, with its own column. Survey stays open after firing — this is
+// a "you have enough signal" event, not a terminal one. No-op if no webhook_url is
+// configured or if notify_at_responses is null (the WHERE filter excludes that row).
+export async function tryFireThresholdWebhook(surveyId: string): Promise<void> {
+  const rows = (await sql`
+    UPDATE surveys
+    SET threshold_webhook_fired_at = now()
+    WHERE id = ${surveyId}
+      AND threshold_webhook_fired_at IS NULL
+      AND notify_at_responses IS NOT NULL
+      AND status = 'open'
+    RETURNING webhook_url, response_count, notify_at_responses
+  `) as Array<{
+    webhook_url: string | null
+    response_count: number
+    notify_at_responses: number | null
+  }>
+
+  const row = rows[0]
+  if (!row?.webhook_url || row.notify_at_responses == null) return
+
+  fireWebhook(row.webhook_url, {
+    event_id: `evt_${nanoid(12)}`,
+    event: 'threshold_reached',
+    survey_id: surveyId,
+    status: 'open',
+    response_count: row.response_count,
+    threshold: row.notify_at_responses,
+    fired_at: new Date().toISOString(),
   })
 }

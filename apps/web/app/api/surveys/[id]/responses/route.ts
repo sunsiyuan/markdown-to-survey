@@ -15,7 +15,7 @@ import {
   computeNextCheckHintSeconds,
   type ResponseAnswerValue,
 } from '@/lib/results'
-import { tryFireCompletionWebhook } from '@/lib/webhook'
+import { tryFireCompletionWebhook, tryFireThresholdWebhook } from '@/lib/webhook'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -34,7 +34,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   try {
     const surveyRows = (await sql`
-      SELECT id, status, response_count, max_responses, expires_at
+      SELECT id, status, response_count, max_responses, expires_at, notify_at_responses
       FROM surveys
       WHERE id = ${surveyId}
       LIMIT 1
@@ -44,6 +44,7 @@ export async function POST(request: Request, context: RouteContext) {
       response_count: number
       max_responses: number | null
       expires_at: string | null
+      notify_at_responses: number | null
     }>
 
     const survey = surveyRows[0]
@@ -76,6 +77,14 @@ export async function POST(request: Request, context: RouteContext) {
     `
 
     const newCount = survey.response_count + 1
+
+    // Threshold first so the survey is still status='open' when the threshold webhook
+    // fires. If notify_at_responses === max_responses, both fire on this response (separate
+    // event_ids); the threshold's status:'open' is true at the moment it fires.
+    if (survey.notify_at_responses != null && newCount >= survey.notify_at_responses) {
+      await tryFireThresholdWebhook(surveyId)
+    }
+
     if (survey.max_responses != null && newCount >= survey.max_responses) {
       await sql`UPDATE surveys SET status = 'closed' WHERE id = ${surveyId} AND status = 'open'`
       await tryFireCompletionWebhook(surveyId, 'max_responses')

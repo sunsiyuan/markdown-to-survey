@@ -277,14 +277,21 @@ server.registerTool(
         'Optional. ISO 8601 datetime — close the survey automatically at this time (e.g. "2026-04-14T00:00:00Z").'
       ),
       webhook_url: z.string().url().optional().describe(
-        'Optional. URL to POST to once when the survey closes. ' +
-        'Payload: { event_id, survey_id, status: "closed", closed_reason: "manual" | "max_responses" | "expired", response_count, closed_at }. ' +
-        'Fires on close_survey (manual), max_responses reached, or expires_at passed (lazy — within seconds of any next interaction). ' +
-        'Use event_id to dedupe in case of retries; delivery is at-least-once per terminal event.'
+        'Optional. URL to POST to when the survey hits a notable event. Branch on the "event" field. ' +
+        'Closure: { event_id, event: "survey_closed", survey_id, status: "closed", closed_reason: "manual" | "max_responses" | "expired", response_count, closed_at } — fires on close_survey, max_responses reached, or expires_at passed (lazy, within seconds of any next interaction). ' +
+        'Threshold (if notify_at_responses is set): { event_id, event: "threshold_reached", survey_id, status: "open", response_count, threshold, fired_at }. ' +
+        'Use event_id to dedupe; delivery is at-least-once per event type.'
+      ),
+      notify_at_responses: z.number().int().positive().optional().describe(
+        'Optional. Fire the webhook once when this many responses arrive — survey stays open. ' +
+        'Use this to wake the agent on "enough signal" without waiting for full closure. ' +
+        'Has no effect unless webhook_url is also set. ' +
+        'If equal to max_responses, both threshold and closure events fire on the same response (separate event_ids). ' +
+        'Must be ≤ max_responses if both are set; otherwise rejected at create time.'
       ),
     },
   },
-  async ({ schema, max_responses, expires_at, webhook_url }) => {
+  async ({ schema, max_responses, expires_at, webhook_url, notify_at_responses }) => {
     const apiKeyError = requireApiKey()
     if (apiKeyError) {
       return apiKeyError
@@ -296,7 +303,7 @@ server.registerTool(
         'Content-Type': 'application/json',
         Authorization: `Bearer ${process.env.HUMANSURVEY_API_KEY}`,
       },
-      body: JSON.stringify({ schema, max_responses, expires_at, webhook_url }),
+      body: JSON.stringify({ schema, max_responses, expires_at, webhook_url, notify_at_responses }),
     })
 
     const payload = (await response.json().catch(() => null)) as

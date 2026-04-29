@@ -23,12 +23,14 @@ export async function POST(request: Request) {
         max_responses?: number
         expires_at?: string | null
         webhook_url?: string
+        notify_at_responses?: number | null
       }
     | null
   const schemaInput = body?.schema
   const maxResponses = body?.max_responses
   const expiresAt = body?.expires_at
   const webhookUrl = body?.webhook_url?.trim() || null
+  const notifyAtResponses = body?.notify_at_responses ?? null
 
   if (!schemaInput) {
     return NextResponse.json({ error: 'schema is required' }, { status: 400 })
@@ -58,6 +60,31 @@ export async function POST(request: Request) {
   if (webhookUrl !== null && !/^https?:\/\/.+/.test(webhookUrl)) {
     return NextResponse.json(
       { error: 'webhook_url must be a valid http or https URL' },
+      { status: 400 },
+    )
+  }
+
+  if (
+    notifyAtResponses !== null &&
+    (!Number.isInteger(notifyAtResponses) || notifyAtResponses <= 0)
+  ) {
+    return NextResponse.json(
+      { error: 'notify_at_responses must be a positive integer' },
+      { status: 400 },
+    )
+  }
+
+  if (
+    notifyAtResponses !== null &&
+    maxResponses !== undefined &&
+    maxResponses !== null &&
+    notifyAtResponses > maxResponses
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          'notify_at_responses must be ≤ max_responses; otherwise the threshold would never fire (max_responses closes the survey first)',
+      },
       { status: 400 },
     )
   }
@@ -94,6 +121,7 @@ export async function POST(request: Request) {
         max_responses,
         expires_at,
         webhook_url,
+        notify_at_responses,
         source
       )
       VALUES (
@@ -107,6 +135,7 @@ export async function POST(request: Request) {
         ${maxResponses ?? null},
         ${expiresAt ?? null}::timestamptz,
         ${webhookUrl},
+        ${notifyAtResponses},
         ${request.headers.get('X-Source') === 'demo' ? 'demo' : 'api'}
       )
     `
