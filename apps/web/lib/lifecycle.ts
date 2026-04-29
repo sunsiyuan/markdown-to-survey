@@ -9,10 +9,11 @@ export type SurveyLifecycle = {
 }
 
 export function getSurveyClosureReason(survey: SurveyLifecycle) {
-  if ((survey.status ?? 'open') === 'closed') {
-    return 'closed'
-  }
-
+  // Check specific causes BEFORE the generic 'closed' fallback. A survey may have
+  // status='closed' because expiry passed or max_responses was hit — preserving the
+  // specific cause matters for the public completion_reason and for 410 messaging.
+  // Only fall back to 'closed' when no other cause is detectable (e.g. manual close
+  // with no max/expiry configured).
   if (survey.expires_at && new Date(survey.expires_at) < new Date()) {
     return 'expired'
   }
@@ -23,6 +24,10 @@ export function getSurveyClosureReason(survey: SurveyLifecycle) {
     survey.response_count >= survey.max_responses
   ) {
     return 'full'
+  }
+
+  if ((survey.status ?? 'open') === 'closed') {
+    return 'closed'
   }
 
   return null

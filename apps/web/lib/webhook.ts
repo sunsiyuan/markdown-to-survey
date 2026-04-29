@@ -72,8 +72,13 @@ export async function tryFireCompletionWebhook(
 
 // Atomically claim the threshold-webhook fire slot. Same race-proof pattern as the
 // completion variant, with its own column. Survey stays open after firing — this is
-// a "you have enough signal" event, not a terminal one. No-op if no webhook_url is
-// configured or if notify_at_responses is null (the WHERE filter excludes that row).
+// a "you have enough signal" event, not a terminal one.
+//
+// Safe to call unconditionally after every response insert: the WHERE clause gates
+// on the persisted response_count (set by the after-insert trigger), so two concurrent
+// inserts that each hold a stale snapshot still both attempt the UPDATE and Postgres
+// row-locks settle on the actual current count. No-op if no webhook_url, no
+// notify_at_responses, count not yet at threshold, or already fired.
 export async function tryFireThresholdWebhook(surveyId: string): Promise<void> {
   const rows = (await sql`
     UPDATE surveys
@@ -81,6 +86,7 @@ export async function tryFireThresholdWebhook(surveyId: string): Promise<void> {
     WHERE id = ${surveyId}
       AND threshold_webhook_fired_at IS NULL
       AND notify_at_responses IS NOT NULL
+      AND response_count >= notify_at_responses
       AND status = 'open'
     RETURNING webhook_url, response_count, notify_at_responses
   `) as Array<{
@@ -101,4 +107,21 @@ export async function tryFireThresholdWebhook(surveyId: string): Promise<void> {
     threshold: row.notify_at_responses,
     fired_at: new Date().toISOString(),
   })
+}
+
+// Atomically transition a survey to 'closed' iff the persisted response_count has
+// reached max_responses. Race-proof against concurrent inserts (which all see stale
+// pre-insert snapshots) by gating on the DB-current count rather than caller-computed
+// newCount. Returns true iff this call performed the transition.
+export async function tryCloseByMaxResponses(surveyId: string): Promise<boolean> {
+  const rows = (await sql`
+    UPDATE surveys
+    SET status = 'closed'
+    WHERE id = ${surveyId}
+      AND status = 'open'
+      AND max_responses IS NOT NULL
+      AND response_count >= max_responses
+    RETURNING id
+  `) as Array<{ id: string }>
+  return rows.length > 0
 }

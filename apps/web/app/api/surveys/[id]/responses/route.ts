@@ -15,7 +15,11 @@ import {
   computeNextCheckHintSeconds,
   type ResponseAnswerValue,
 } from '@/lib/results'
-import { tryFireCompletionWebhook, tryFireThresholdWebhook } from '@/lib/webhook'
+import {
+  tryCloseByMaxResponses,
+  tryFireCompletionWebhook,
+  tryFireThresholdWebhook,
+} from '@/lib/webhook'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -34,7 +38,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   try {
     const surveyRows = (await sql`
-      SELECT id, status, response_count, max_responses, expires_at, notify_at_responses
+      SELECT id, status, response_count, max_responses, expires_at
       FROM surveys
       WHERE id = ${surveyId}
       LIMIT 1
@@ -44,7 +48,6 @@ export async function POST(request: Request, context: RouteContext) {
       response_count: number
       max_responses: number | null
       expires_at: string | null
-      notify_at_responses: number | null
     }>
 
     const survey = surveyRows[0]
@@ -76,17 +79,13 @@ export async function POST(request: Request, context: RouteContext) {
       VALUES (${responseId}, ${surveyId}, ${JSON.stringify(answers)}::jsonb)
     `
 
-    const newCount = survey.response_count + 1
-
     // Threshold first so the survey is still status='open' when the threshold webhook
-    // fires. If notify_at_responses === max_responses, both fire on this response (separate
-    // event_ids); the threshold's status:'open' is true at the moment it fires.
-    if (survey.notify_at_responses != null && newCount >= survey.notify_at_responses) {
-      await tryFireThresholdWebhook(surveyId)
-    }
+    // fires. If notify_at_responses === max_responses, both fire on this response with
+    // separate event_ids. Both helpers gate internally on the persisted response_count,
+    // so they're race-safe against concurrent inserts that share a stale snapshot.
+    await tryFireThresholdWebhook(surveyId)
 
-    if (survey.max_responses != null && newCount >= survey.max_responses) {
-      await sql`UPDATE surveys SET status = 'closed' WHERE id = ${surveyId} AND status = 'open'`
+    if (await tryCloseByMaxResponses(surveyId)) {
       await tryFireCompletionWebhook(surveyId, 'max_responses')
     }
 
