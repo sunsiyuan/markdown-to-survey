@@ -278,8 +278,9 @@ server.registerTool(
       ),
       webhook_url: z.string().url().optional().describe(
         'Optional. URL to POST to once when the survey closes. ' +
-        'Payload: { survey_id, status: "closed", closed_reason: "manual" | "max_responses", response_count, closed_at }. ' +
-        'Fires when you call close_survey or when max_responses is reached. Does not fire when expires_at elapses.'
+        'Payload: { event_id, survey_id, status: "closed", closed_reason: "manual" | "max_responses" | "expired", response_count, closed_at }. ' +
+        'Fires on close_survey (manual), max_responses reached, or expires_at passed (lazy — within seconds of any next interaction). ' +
+        'Use event_id to dedupe in case of retries; delivery is at-least-once per terminal event.'
       ),
     },
   },

@@ -1,3 +1,6 @@
+import { sql } from '@/lib/db'
+import { tryFireCompletionWebhook } from '@/lib/webhook'
+
 export type SurveyLifecycle = {
   status?: string | null
   response_count?: number | null
@@ -36,4 +39,21 @@ export function mapClosureReasonForPayload(
 ): PublicCompletionReason | null {
   if (reason === 'full') return 'max_responses'
   return reason
+}
+
+// Lazy expiry handling. If the survey has passed its expires_at and is still marked open,
+// atomically transition it to closed and fire the completion webhook (idempotently).
+// Returns the survey's effective status after handling — assign it back to keep local state in sync.
+export async function ensureExpiredHandled(survey: {
+  id: string
+  status: string
+  expires_at: string | null
+}): Promise<string> {
+  if (survey.status === 'closed') return survey.status
+  if (!survey.expires_at) return survey.status
+  if (new Date(survey.expires_at) > new Date()) return survey.status
+
+  await sql`UPDATE surveys SET status = 'closed' WHERE id = ${survey.id} AND status = 'open'`
+  await tryFireCompletionWebhook(survey.id, 'expired')
+  return 'closed'
 }

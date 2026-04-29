@@ -5,13 +5,17 @@ import type { Survey } from '@/lib/survey'
 
 import { requireAuth } from '@/lib/auth'
 import { sql, parseJsonValue } from '@/lib/db'
-import { getSurveyClosureReason, mapClosureReasonForPayload } from '@/lib/lifecycle'
+import {
+  ensureExpiredHandled,
+  getSurveyClosureReason,
+  mapClosureReasonForPayload,
+} from '@/lib/lifecycle'
 import {
   buildResultsPayload,
   computeNextCheckHintSeconds,
   type ResponseAnswerValue,
 } from '@/lib/results'
-import { fireWebhook } from '@/lib/webhook'
+import { tryFireCompletionWebhook } from '@/lib/webhook'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -30,7 +34,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   try {
     const surveyRows = (await sql`
-      SELECT id, status, response_count, max_responses, expires_at, webhook_url
+      SELECT id, status, response_count, max_responses, expires_at
       FROM surveys
       WHERE id = ${surveyId}
       LIMIT 1
@@ -40,7 +44,6 @@ export async function POST(request: Request, context: RouteContext) {
       response_count: number
       max_responses: number | null
       expires_at: string | null
-      webhook_url: string | null
     }>
 
     const survey = surveyRows[0]
@@ -48,6 +51,8 @@ export async function POST(request: Request, context: RouteContext) {
     if (!survey) {
       return NextResponse.json({ error: 'Survey not found' }, { status: 404 })
     }
+
+    survey.status = await ensureExpiredHandled(survey)
 
     const closureReason = getSurveyClosureReason(survey)
 
@@ -73,15 +78,7 @@ export async function POST(request: Request, context: RouteContext) {
     const newCount = survey.response_count + 1
     if (survey.max_responses != null && newCount >= survey.max_responses) {
       await sql`UPDATE surveys SET status = 'closed' WHERE id = ${surveyId} AND status = 'open'`
-      if (survey.webhook_url) {
-        fireWebhook(survey.webhook_url, {
-          survey_id: surveyId,
-          status: 'closed',
-          closed_reason: 'max_responses',
-          response_count: newCount,
-          closed_at: new Date().toISOString(),
-        })
-      }
+      await tryFireCompletionWebhook(surveyId, 'max_responses')
     }
 
     return NextResponse.json({ id: responseId }, { status: 201 })
@@ -127,6 +124,12 @@ export async function GET(request: Request, context: RouteContext) {
         { status: 403 },
       )
     }
+
+    surveyRow.status = await ensureExpiredHandled({
+      id: surveyId,
+      status: surveyRow.status,
+      expires_at: surveyRow.expires_at,
+    })
 
     const responseRows = (await sql`
       SELECT id, answers, created_at
