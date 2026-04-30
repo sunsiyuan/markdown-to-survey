@@ -12,3 +12,7 @@ dist/
 fixtures/
 .mcpregistry_github_token
 .mcpregistry_registry_token
+
+# Local-only planning, strategy, and Claude context — never commit
+.local/
+.claude/

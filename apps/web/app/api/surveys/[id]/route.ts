@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/lib/auth'
 import { sql, parseJsonValue } from '@/lib/db'
-import { fireWebhook } from '@/lib/webhook'
+import { ensureExpiredHandled } from '@/lib/lifecycle'
+import { tryFireCompletionWebhook } from '@/lib/webhook'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -33,6 +34,12 @@ export async function GET(_request: Request, context: RouteContext) {
     if (!row) {
       return NextResponse.json({ error: 'Survey not found' }, { status: 404 })
     }
+
+    row.status = await ensureExpiredHandled({
+      id: row.id,
+      status: row.status,
+      expires_at: row.expires_at,
+    })
 
     return NextResponse.json({
       ...row,
@@ -91,7 +98,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   try {
     const rows = (await sql`
-      SELECT id, api_key_id, status, max_responses, expires_at, webhook_url
+      SELECT id, api_key_id, status, max_responses, expires_at
       FROM surveys
       WHERE id = ${id}
       LIMIT 1
@@ -101,7 +108,6 @@ export async function PATCH(request: Request, context: RouteContext) {
       status: string
       max_responses: number | null
       expires_at: string | null
-      webhook_url: string | null
     }>
 
     const existingSurvey = rows[0]
@@ -120,36 +126,46 @@ export async function PATCH(request: Request, context: RouteContext) {
     const nextStatus = body.status ?? existingSurvey.status
     const nextMaxResponses =
       body.max_responses !== undefined ? body.max_responses : existingSurvey.max_responses
-    const nextExpiresAt =
-      body.expires_at !== undefined ? body.expires_at : existingSurvey.expires_at
+    const isManualClose = nextStatus === 'closed' && existingSurvey.status !== 'closed'
+    const isReopen = nextStatus === 'open' && existingSurvey.status === 'closed'
+    // Clear expires_at on manual close so cursor reads stably report
+    // completion_reason='closed' rather than drifting to 'expired' once wall-clock passes
+    // a future deadline. The webhook already fired with 'manual'; the persisted state
+    // must match.
+    const nextExpiresAt = isManualClose
+      ? null
+      : body.expires_at !== undefined
+        ? body.expires_at
+        : existingSurvey.expires_at
 
+    // Reopen starts a new collection cycle: clear the completion-webhook fire-once gate
+    // so the next close (manual / max / expired) delivers a fresh `survey_closed` event.
+    // threshold_webhook_fired_at is intentionally NOT cleared — "enough signal" is a
+    // count-based fact that doesn't reset just because the owner reopened.
     const updatedRows = (await sql`
       UPDATE surveys
       SET
         status = ${nextStatus},
         max_responses = ${nextMaxResponses},
-        expires_at = ${nextExpiresAt}::timestamptz
+        expires_at = ${nextExpiresAt}::timestamptz,
+        completion_webhook_fired_at = CASE
+          WHEN ${isReopen} THEN NULL
+          ELSE completion_webhook_fired_at
+        END
       WHERE id = ${id} AND api_key_id = ${auth.keyId}
-      RETURNING id, status, max_responses, expires_at, response_count, webhook_url
+      RETURNING id, status, max_responses, expires_at, response_count
     `) as Array<{
       id: string
       status: string
       max_responses: number | null
       expires_at: string | null
       response_count: number
-      webhook_url: string | null
     }>
 
     const updated = updatedRows[0]
 
-    if (nextStatus === 'closed' && existingSurvey.status !== 'closed' && updated.webhook_url) {
-      fireWebhook(updated.webhook_url, {
-        survey_id: id,
-        status: 'closed',
-        closed_reason: 'manual',
-        response_count: updated.response_count,
-        closed_at: new Date().toISOString(),
-      })
+    if (isManualClose) {
+      await tryFireCompletionWebhook(id, 'manual')
     }
 
     return NextResponse.json({
