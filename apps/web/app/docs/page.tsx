@@ -211,7 +211,7 @@ const apiRoutes = [
   ['POST /api/surveys', 'Bearer key', 'Create a survey from JSON schema.'],
   ['GET /api/surveys', 'Bearer key', 'List surveys owned by the current key.'],
   ['GET /api/surveys/{id}', 'Public', 'Return survey metadata, schema, and lifecycle fields.'],
-  ['PATCH /api/surveys/{id}', 'Bearer key', 'Update status, max_responses, or expires_at.'],
+  ['PATCH /api/surveys/{id}', 'Bearer key', 'Update status (close or reopen), max_responses, or expires_at. Manual close also clears expires_at; reopen resets the close-webhook fire-once gate so the next close fires fresh.'],
   ['POST /api/surveys/{id}/responses', 'Public', 'Submit a response payload.'],
   ['GET /api/surveys/{id}/responses', 'Bearer key', 'Return aggregated question results and raw submissions.'],
 ]

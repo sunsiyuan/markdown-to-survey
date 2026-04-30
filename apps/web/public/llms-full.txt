@@ -198,7 +198,12 @@ Supported operators:
 ### `PATCH /api/surveys/{id}`
 
 - Auth required, must own the survey
-- Update any subset of: `{ "status": "closed", "max_responses": 100, "expires_at": "..." }`
+- Update any subset of: `{ "status": "closed" | "open", "max_responses": 100, "expires_at": "..." }`
+- Lifecycle transitions:
+  - **Manual close** (`status: "closed"` from open): fires `survey_closed` webhook with `closed_reason: "manual"`, and clears `expires_at` in the same UPDATE so a previously-set future deadline doesn't later cause `completion_reason` to drift from `"closed"` to `"expired"`. If a deadline is desired post-close, supply `expires_at` in the same PATCH or via a follow-up.
+  - **Reopen** (`status: "open"` from closed): starts a new collection cycle. Clears the completion-webhook fire-once gate so the next close (manual / max_responses / expired) delivers a fresh `survey_closed` event. The threshold gate is **not** cleared. If the survey was max-closed (so `expires_at` was preserved) and that timestamp is now past, ensureExpiredHandled will close it again on the next read; pass a new `expires_at` if you want to extend the window.
+  - Other field updates (`max_responses`, `expires_at`) without a status change don't touch webhook gates.
+- `webhook_url` and `notify_at_responses` cannot be changed after create — they are set once at POST time.
 - Response 200: `{ "id", "status", "max_responses", "expires_at" }`
 
 ### `POST /api/surveys/{id}/responses`
@@ -220,9 +225,9 @@ Supported operators:
 - Returns:
   - `count`: total response count (full survey, ignores cursor)
   - `is_final`: boolean — true once the survey is closed (manual / max_responses / expired)
-  - `completion_reason`: `"closed" | "max_responses" | "expired"` when `is_final` is true, else null
+  - `completion_reason`: `"closed" | "max_responses" | "expired"` when `is_final` is true, else null. Vocabulary differs from the webhook `closed_reason` in one spot: cursor `"closed"` corresponds to webhook `closed_reason: "manual"`. Each cause is stable post-close (no drift over time).
   - `next_check_hint_seconds`: advisory poll cadence in seconds, server-computed from recent response rate and time-to-expiry. null when `is_final`. Treat as a suggestion — agents may check sooner.
-  - `next_cursor`: id of the newest response in the full set, or null if empty. Pass back as `since_response_id` on the next call.
+  - `next_cursor`: id of the newest response in the full set, or null if empty. Pass back as `since_response_id` on the next call. Cursor reads are tie-proof — concurrent inserts that share a clock-tick still all surface in subsequent deltas.
   - `questions`: pre-aggregated results per question (see below)
   - `raw`: array of individual responses, optionally cursor-filtered
 

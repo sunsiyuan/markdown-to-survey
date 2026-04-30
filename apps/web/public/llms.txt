@@ -70,10 +70,15 @@ HumanSurvey returns a `/s/{id}` share URL. It does **not** distribute to the aud
 
 For surveys whose collection window spans hours or days, the agent should not stay alive polling. Two primitives:
 
-- **Webhook** — set `webhook_url` at create. Receives `event: "survey_closed"` on closure (manual, max_responses, expires_at), or `event: "threshold_reached"` once when `notify_at_responses` is reached (survey stays open). Use `event_id` to dedupe.
-- **Cursor reads** — `GET /api/surveys/{id}/responses?since_response_id=...` filters `raw` to new responses since the cursor. Response includes `is_final`, `completion_reason`, `next_check_hint_seconds`, and `next_cursor` so the agent can re-enter, fetch only deltas, and know when to stop checking.
+- **Webhook** — set `webhook_url` at create. Receives `event: "survey_closed"` on closure with `closed_reason: "manual" | "max_responses" | "expired"`, or `event: "threshold_reached"` once when `response_count` first crosses `notify_at_responses` (survey stays open). Use `event_id` to dedupe; delivery is at-least-once per event type. `notify_at_responses` requires `webhook_url` at create time (rejected otherwise; PATCH does not accept `webhook_url`).
+- **Cursor reads** — `GET /api/surveys/{id}/responses?since_response_id=...` filters `raw` to new responses since the cursor. Response includes `is_final`, `completion_reason` (`"closed" | "max_responses" | "expired"` — `"closed"` corresponds to webhook `closed_reason: "manual"`), `next_check_hint_seconds`, and `next_cursor` so the agent can re-enter, fetch only deltas, and know when to stop checking.
 
 Webhooks are push (preferred when the agent host can receive callbacks); cursor reads are the authoritative pull fallback for missed deliveries.
+
+## Lifecycle (close, reopen, collection cycles)
+
+- **Manual close** — `PATCH /api/surveys/{id} { status: "closed" }`. Fires the `survey_closed` webhook with `closed_reason: "manual"`. Also clears `expires_at` so the close cause stays stable (so a closed survey doesn't drift to `completion_reason: "expired"` once a previously-set deadline passes).
+- **Reopen** — `PATCH /api/surveys/{id} { status: "open" }` on a closed survey starts a new collection cycle. The completion-webhook fire-once gate is cleared so the next close (manual / max_responses / expired) delivers a fresh `survey_closed` event. The threshold gate is **not** cleared — "enough signal" is a count-based fact and `response_count` doesn't reset. If the prior `expires_at` was preserved (only manual-close clears it), pass a new one in the PATCH or it will expire immediately on the next interaction.
 
 ## MCP Integration (Claude Code)
 
