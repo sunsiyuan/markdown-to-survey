@@ -104,14 +104,18 @@ const openApiDocument = {
       delete: {
         operationId: 'revokeApiKey',
         summary: 'Revoke an API key',
-        description: 'Permanently revoke the authenticated API key. All surveys created with this key remain accessible but the key can no longer be used to create new ones.',
+        description: 'Revoke the authenticated API key. After revocation the key is rejected on every endpoint. A key can only revoke itself — the path id must match the key in the Authorization header. Surveys created with the key are not deleted (hosted /s/{id} URLs keep accepting responses), but the revoked key can no longer read their results, and there is no in-place rotation — a replacement key does not inherit ownership of those surveys.',
         security: [{ bearerAuth: [] }],
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Key ID from the createApiKey response' }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Key ID from the createApiKey response. Must be the id of the key in the Authorization header.' }],
         responses: {
           '204': { description: 'API key revoked' },
           '401': {
             description: 'Missing or invalid API key',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          '403': {
+            description: 'The path id does not match the authenticated key',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' }, example: { error: 'You can only revoke the current API key' } } },
           },
         },
       },

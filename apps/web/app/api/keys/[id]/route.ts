@@ -23,9 +23,14 @@ export async function DELETE(request: Request, context: RouteContext) {
   }
 
   try {
+    // Soft-delete: a hard DELETE would violate the surveys.api_key_id foreign key
+    // for any key that has created a survey. Stamping revoked_at makes requireAuth
+    // reject the key while leaving survey ownership records intact.
     await sql`
-      DELETE FROM api_keys
+      UPDATE api_keys
+      SET revoked_at = now()
       WHERE id = ${auth.keyId}
+        AND revoked_at IS NULL
     `
 
     return new NextResponse(null, { status: 204 })

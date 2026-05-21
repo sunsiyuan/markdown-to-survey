@@ -15,6 +15,18 @@ const authSnippet = `curl -X POST https://www.humansurvey.co/api/keys \\
     "wallet_address": "eip155:8453:0xabc..."
   }'`
 
+const keyManagementSnippet = `# View the current key's metadata — id, name, created_at, last_used_at
+curl https://www.humansurvey.co/api/keys \\
+  -H "Authorization: Bearer hs_sk_..."
+
+# Rotate: mint a replacement, move your integration to it, then revoke the old key
+curl -X POST https://www.humansurvey.co/api/keys \\
+  -H "Content-Type: application/json" \\
+  -d '{"name": "event-agent (rotated 2026-05)"}'
+
+curl -X DELETE https://www.humansurvey.co/api/keys/<old-key-id> \\
+  -H "Authorization: Bearer hs_sk_<old-key>"`
+
 const markdownChoiceSnippet = `**Q1. Would you attend a future event?**
 
 - ☐ Definitely
@@ -355,6 +367,45 @@ export default function DocsPage() {
               <p>
                 Pass the key on authenticated requests:
                 <code className="ml-2">Authorization: Bearer hs_sk_...</code>
+              </p>
+
+              <h3 className="text-lg font-semibold text-slate-950">Key management</h3>
+              <p>
+                There is no dashboard or sign-up — HumanSurvey is API-first, and keys are
+                created and managed entirely through the <code>/api/keys</code> endpoints
+                (or the <code>create_key</code> MCP tool). A human generates their first
+                key exactly the way an agent does: an unauthenticated{' '}
+                <code>POST /api/keys</code>, as shown above. The raw <code>hs_sk_...</code>{' '}
+                value is returned <strong>once</strong> — store it in a secret manager or
+                an environment variable; it is hashed at rest and cannot be recovered.
+              </p>
+              <CodeBlock code={keyManagementSnippet} />
+              <ul className="list-disc space-y-2 pl-5">
+                <li>
+                  <strong>View</strong> — <code>GET /api/keys</code> with the key returns
+                  its own metadata (<code>id</code>, <code>name</code>,{' '}
+                  <code>created_at</code>, <code>last_used_at</code>). The key value itself
+                  is never returned. A key only sees itself — there is no account that
+                  groups multiple keys.
+                </li>
+                <li>
+                  <strong>Revoke</strong> — <code>DELETE /api/keys/{'{id}'}</code> with the
+                  key, passing that same key&apos;s <code>id</code>. After revocation the
+                  key is rejected with <code>401</code>. Do this immediately if a key
+                  leaks.
+                </li>
+                <li>
+                  <strong>Rotate</strong> — there is no in-place rotation: mint a new key,
+                  move your integration to it, then revoke the old one.
+                </li>
+              </ul>
+              <p>
+                One caveat when rotating: a survey is owned by the key that created it, so
+                a new key cannot read results for surveys created under the old key. Revoking
+                a key does not delete its surveys — hosted <code>/s/{'{id}'}</code> URLs keep
+                accepting responses — but creator-API access to those surveys ends with the
+                key. If a key leaks, revoke it, and re-create any surveys you still need to
+                read under the new key.
               </p>
             </Section>
 
