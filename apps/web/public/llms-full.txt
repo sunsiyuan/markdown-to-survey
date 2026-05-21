@@ -209,12 +209,13 @@ Supported operators:
 ### `POST /api/surveys/{id}/responses`
 
 - **Public** — no auth required
-- Request: `{ "answers": { "q_0": "opt_1", "q_1": ["opt_0", "opt_2"], "q_2": 4, "q_3": "free text" } }`
+- Request: `{ "answers": { "q_0": "opt_1", "q_1": ["opt_0", "opt_2"], "q_2": 4, "q_3": "free text" }, "metadata": { "source": "pricing" } }`
 - Answer value types by question type:
   - `single_choice` → option ID string (e.g. `"opt_0"`)
   - `multi_choice` → array of option ID strings (e.g. `["opt_0", "opt_2"]`)
   - `scale` → number within the defined range (e.g. `4`)
   - `text` → string
+- `metadata`: optional response tags. The survey page captures this automatically from custom (non-reserved) URL query params — see Embedding § Response tagging. Sanitized: string values only, at most 20 keys, keys ≤ 64 chars, values ≤ 512 chars.
 - Response 201: `{ "id": "responseId" }`
 - Error 410: `{ "error": "This survey is closed" }` / `"...expired"` / `"...full"`
 
@@ -229,7 +230,7 @@ Supported operators:
   - `next_check_hint_seconds`: advisory poll cadence in seconds, server-computed from recent response rate and time-to-expiry. null when `is_final`. Treat as a suggestion — agents may check sooner.
   - `next_cursor`: id of the newest response in the full set, or null if empty. Pass back as `since_response_id` on the next call. Cursor reads are tie-proof — concurrent inserts that share a clock-tick still all surface in subsequent deltas.
   - `questions`: pre-aggregated results per question (see below)
-  - `raw`: array of individual responses, optionally cursor-filtered
+  - `raw`: array of individual responses, optionally cursor-filtered. Each entry: `{ "id", "answers", "metadata", "created_at" }` — `metadata` is the response tags object (`{}` when none were sent).
 
 #### Aggregated question shapes
 
@@ -260,6 +261,14 @@ The hosted survey page can be dropped into any third-party site for onboarding /
 ### URL contract
 
 - `https://www.humansurvey.co/s/{id}?embed=1` — renders the form on a transparent, full-width container with no header, footer, or page gradient.
+
+### Response tagging
+
+Append custom query params to the survey URL (embedded or standalone) to tag where a response came from — e.g. `?embed=1&source=pricing&tier=lite`. Any param that is not reserved is captured and stored with the response as a `metadata` object, surfaced on each `raw[]` entry from `GET /api/surveys/{id}/responses` and as a per-tag breakdown in `get_results`.
+
+- Reserved param: `embed` — consumed by the renderer, never stored. Every other param is captured.
+- Sanitized on capture: string keys/values only, at most 20 keys, keys ≤ 64 chars, values ≤ 512 chars. Repeated params keep their last value.
+- Responses with no custom params carry `metadata: {}`.
 
 ### postMessage events
 

@@ -13,6 +13,9 @@ type SurveyFormProps = {
   surveyId: string
   survey: Survey
   embedded?: boolean
+  // Custom query params captured from the survey URL, persisted with the response
+  // for source tagging. See lib/metadata.ts.
+  metadata?: Record<string, string>
 }
 
 type AnswerValue = string | string[] | number | undefined
@@ -23,7 +26,12 @@ type Stage =
   | { kind: 'question'; id: string }
   | { kind: 'submitted' }
 
-export function SurveyForm({ surveyId, survey, embedded = false }: SurveyFormProps) {
+export function SurveyForm({
+  surveyId,
+  survey,
+  embedded = false,
+  metadata = {},
+}: SurveyFormProps) {
   const allQuestions = survey.sections.flatMap((section) => section.questions)
 
   const [answers, setAnswers] = useState<AnswerMap>({})
@@ -116,10 +124,11 @@ export function SurveyForm({ surveyId, survey, embedded = false }: SurveyFormPro
     setSubmitting(true)
     setError(null)
     try {
+      const hasMetadata = Object.keys(metadata).length > 0
       const response = await fetch(`/api/surveys/${surveyId}/responses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify(hasMetadata ? { answers, metadata } : { answers }),
       })
       if (!response.ok) {
         throw new Error('Submission failed')
@@ -144,7 +153,7 @@ export function SurveyForm({ surveyId, survey, embedded = false }: SurveyFormPro
     } finally {
       setSubmitting(false)
     }
-  }, [answers, embedded, surveyId, visibleQuestions])
+  }, [answers, embedded, metadata, surveyId, visibleQuestions])
 
   const start = useCallback(() => {
     if (visibleQuestions.length === 0) return

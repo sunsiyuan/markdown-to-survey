@@ -166,6 +166,8 @@ The iframe posts three message types to `window.parent`, each with `source: 'hum
 
 The host owns whatever happens after `submitted` — redirect, hide the iframe, render their own thank-you, fire analytics, etc.
 
+Custom query params on the survey URL (e.g. `?embed=1&source=pricing`) are captured as per-response `metadata` for source tagging — everything except the reserved `embed` param. Tags surface on each `raw[]` entry of `GET /api/surveys/{id}/responses` and in `get_results`. See llms-full.txt for sanitization limits.
+
 ## Question Types
 
 - `single_choice` — one selection; requires `options`

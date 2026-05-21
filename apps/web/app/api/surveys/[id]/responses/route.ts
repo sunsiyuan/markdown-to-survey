@@ -5,6 +5,7 @@ import type { Survey } from '@/lib/survey'
 
 import { requireAuth } from '@/lib/auth'
 import { sql, parseJsonValue } from '@/lib/db'
+import { sanitizeMetadata } from '@/lib/metadata'
 import {
   ensureExpiredHandled,
   getSurveyClosureReason,
@@ -29,12 +30,18 @@ type ResponseAnswers = Record<string, string | string[] | number>
 
 export async function POST(request: Request, context: RouteContext) {
   const { id: surveyId } = await context.params
-  const body = (await request.json().catch(() => null)) as { answers?: ResponseAnswers } | null
+  const body = (await request.json().catch(() => null)) as
+    | { answers?: ResponseAnswers; metadata?: unknown }
+    | null
   const answers = body?.answers
 
   if (!answers || typeof answers !== 'object') {
     return NextResponse.json({ error: 'Answers are required' }, { status: 400 })
   }
+
+  // metadata is optional, host-supplied response tags. Sanitized because this
+  // endpoint is public and unauthenticated.
+  const metadata = sanitizeMetadata(body?.metadata)
 
   try {
     const surveyRows = (await sql`
@@ -75,8 +82,13 @@ export async function POST(request: Request, context: RouteContext) {
     const responseId = nanoid(12)
 
     await sql`
-      INSERT INTO responses (id, survey_id, answers)
-      VALUES (${responseId}, ${surveyId}, ${JSON.stringify(answers)}::jsonb)
+      INSERT INTO responses (id, survey_id, answers, metadata)
+      VALUES (
+        ${responseId},
+        ${surveyId},
+        ${JSON.stringify(answers)}::jsonb,
+        ${JSON.stringify(metadata)}::jsonb
+      )
     `
 
     // Threshold first so the survey is still status='open' when the threshold webhook
@@ -140,17 +152,24 @@ export async function GET(request: Request, context: RouteContext) {
     })
 
     const responseRows = (await sql`
-      SELECT id, answers, created_at, seq
+      SELECT id, answers, metadata, created_at, seq
       FROM responses
       WHERE survey_id = ${surveyId}
       ORDER BY seq DESC
-    `) as Array<{ id: string; answers: unknown; created_at: string; seq: number }>
+    `) as Array<{
+      id: string
+      answers: unknown
+      metadata: unknown
+      created_at: string
+      seq: number
+    }>
 
     // Keep seq internal: it's the cursor-ordering token, not part of the public payload.
     const seqById = new Map(responseRows.map((row) => [row.id, row.seq]))
     const allResponses = responseRows.map((row) => ({
       id: row.id,
       answers: parseJsonValue<Record<string, ResponseAnswerValue>>(row.answers),
+      metadata: parseJsonValue<Record<string, string>>(row.metadata),
       created_at: row.created_at,
     }))
 

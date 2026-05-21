@@ -7,6 +7,9 @@ import { z } from 'zod'
 type ResponseRecord = {
   id: string
   answers: Record<string, string | string[] | number>
+  // Host-supplied response tags captured from custom survey-URL query params.
+  // Optional: absent on responses created before tagging shipped.
+  metadata?: Record<string, string>
   created_at: string
 }
 
@@ -438,6 +441,7 @@ server.registerTool(
       nextCursor: responsesPayload.next_cursor ?? null,
       sinceCursor: sinceResponseId ?? null,
       newCount: sinceResponseId ? responsesPayload.raw?.length ?? 0 : null,
+      raw: responsesPayload.raw ?? [],
     })
 
     return {
@@ -649,6 +653,7 @@ function formatResultsSummary(args: {
   nextCursor: string | null
   sinceCursor: string | null
   newCount: number | null
+  raw: ResponseRecord[]
 }) {
   const {
     title,
@@ -662,6 +667,7 @@ function formatResultsSummary(args: {
     nextCursor,
     sinceCursor,
     newCount,
+    raw,
   } = args
 
   const countLabel =
@@ -703,6 +709,7 @@ function formatResultsSummary(args: {
   }
 
   lines.push('')
+  lines.push(...formatTagBreakdown(raw, Boolean(sinceCursor)))
 
   questions.forEach((question, index) => {
     lines.push(`Q${index}. (${question.type}) ${question.label}`)
@@ -761,6 +768,32 @@ function formatResultsSummary(args: {
     lines.push('')
   })
 
+  return lines
+}
+
+// Summarizes host-supplied response tags (metadata) across the raw response set
+// as key → value counts. `scoped` is true when raw was cursor-filtered, so the
+// breakdown covers only the new batch rather than the whole survey.
+function formatTagBreakdown(raw: ResponseRecord[], scoped: boolean): string[] {
+  const byKey = new Map<string, Map<string, number>>()
+  for (const response of raw) {
+    for (const [key, value] of Object.entries(response.metadata ?? {})) {
+      if (typeof value !== 'string') continue
+      const values = byKey.get(key) ?? new Map<string, number>()
+      values.set(value, (values.get(value) ?? 0) + 1)
+      byKey.set(key, values)
+    }
+  }
+  if (byKey.size === 0) return []
+
+  const lines = [scoped ? 'Response tags (new responses):' : 'Response tags:']
+  for (const [key, values] of byKey) {
+    const sorted = [...values.entries()].sort((a, b) => b[1] - a[1])
+    const shown = sorted.slice(0, 10).map(([value, count]) => `${value} ×${count}`)
+    const extra = sorted.length > shown.length ? `, +${sorted.length - shown.length} more` : ''
+    lines.push(`  ${key}: ${shown.join(', ')}${extra}`)
+  }
+  lines.push('')
   return lines
 }
 
