@@ -7,6 +7,9 @@ export type ResponseRecord = {
   id: string
   survey_id?: string
   answers: Record<string, ResponseAnswerValue>
+  // Host-supplied response tags captured from custom survey-URL query params.
+  // Empty object when the response carried no custom params.
+  metadata: Record<string, string>
   created_at: string
 }
 

@@ -7,6 +7,7 @@ import { SurveyClosed } from '@/components/survey/SurveyClosed'
 import { isSurveyClosed } from '@/lib/lifecycle'
 import { SurveyForm } from '@/components/survey/SurveyForm'
 import { sql, parseJsonValue } from '@/lib/db'
+import { extractTagsFromSearchParams } from '@/lib/metadata'
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -14,13 +15,15 @@ export const metadata: Metadata = {
 
 type PageProps = {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ embed?: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 export default async function SurveyPage({ params, searchParams }: PageProps) {
   const { id } = await params
-  const { embed } = await searchParams
-  const embedded = embed === '1'
+  const query = await searchParams
+  const embedded = query.embed === '1'
+  // Custom (non-reserved) query params are captured as response metadata for tagging.
+  const tags = extractTagsFromSearchParams(query)
 
   const rows = (await sql`
     SELECT id, title, schema, status, response_count, max_responses, expires_at
@@ -52,6 +55,7 @@ export default async function SurveyPage({ params, searchParams }: PageProps) {
       surveyId={data.id}
       survey={parseJsonValue<Survey>(data.schema)}
       embedded={embedded}
+      metadata={tags}
     />
   )
 }

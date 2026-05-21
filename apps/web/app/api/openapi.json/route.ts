@@ -354,7 +354,7 @@ const openApiDocument = {
         operationId: 'submitResponse',
         summary: 'Submit a survey response',
         description:
-          'Public endpoint — no authentication required. Submit answers for a survey. Answer keys are question IDs (q_0, q_1, ...) from the survey schema. Values: option ID string for single_choice, array of option ID strings for multi_choice, number for scale, string for text.',
+          'Public endpoint — no authentication required. Submit answers for a survey. Answer keys are question IDs (q_0, q_1, ...) from the survey schema. Values: option ID string for single_choice, array of option ID strings for multi_choice, number for scale, string for text. Optionally attach metadata (response tags) — the survey page also captures this automatically from custom URL query params.',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: {
           required: true,
@@ -375,6 +375,12 @@ const openApiDocument = {
                       ],
                     },
                   },
+                  metadata: {
+                    type: 'object',
+                    description:
+                      'Optional. Host-supplied response tags for segmenting responses by source. The survey page captures these automatically from custom (non-reserved) URL query params, e.g. ?source=pricing. Sanitized server-side: string values only, reserved param "embed" ignored, at most 20 keys, keys capped at 64 chars and values at 512. Returned on each raw[] entry from GET .../responses.',
+                    additionalProperties: { type: 'string' },
+                  },
                 },
               },
               example: {
@@ -383,6 +389,7 @@ const openApiDocument = {
                   q_1: 4,
                   q_2: 'The deploy script failed silently on step 3',
                 },
+                metadata: { source: 'pricing', tier: 'lite' },
               },
             },
           },
@@ -419,7 +426,7 @@ const openApiDocument = {
         operationId: 'getResults',
         summary: 'Get aggregated survey results',
         description:
-          'Returns pre-aggregated results per question (choice tallies, scale stats, text responses) plus raw responses. ' +
+          'Returns pre-aggregated results per question (choice tallies, scale stats, text responses) plus raw responses. Each raw[] entry carries a metadata object with host-supplied response tags (empty when none were sent). ' +
           'For long-running surveys, pass since_response_id (the next_cursor from a prior call) to fetch only new raw responses; aggregates always reflect the full survey. ' +
           'Use is_final + completion_reason to detect terminal state, and next_check_hint_seconds as an advisory poll cadence.',
         security: [{ bearerAuth: [] }],
@@ -470,7 +477,7 @@ const openApiDocument = {
                     },
                   ],
                   raw: [
-                    { id: 'xyz789abcd01', answers: { q_0: 5, q_1: 'opt_0', q_2: 'More networking time between sessions' }, created_at: '2026-04-07T14:00:00.000Z' },
+                    { id: 'xyz789abcd01', answers: { q_0: 5, q_1: 'opt_0', q_2: 'More networking time between sessions' }, metadata: { source: 'pricing' }, created_at: '2026-04-07T14:00:00.000Z' },
                   ],
                 },
               },

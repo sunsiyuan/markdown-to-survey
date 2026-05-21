@@ -171,6 +171,22 @@ const embedIframeSnippet = `<iframe id="hs-survey"
   })
 </script>`
 
+const taggingSnippet = `<!-- ?source and ?tier are captured as response metadata -->
+<iframe src="https://www.humansurvey.co/s/abc123?embed=1&source=pricing&tier=lite"
+        style="width:100%; border:0;"></iframe>
+
+// later — GET /api/surveys/abc123/responses
+{
+  "raw": [
+    {
+      "id": "xyz789abcd01",
+      "answers": { "q_0": 5 },
+      "metadata": { "source": "pricing", "tier": "lite" },
+      "created_at": "2026-04-07T14:00:00.000Z"
+    }
+  ]
+}`
+
 const mcpConfigSnippet = `{
   "mcpServers": {
     "survey": {
@@ -438,6 +454,32 @@ export default function DocsPage() {
                   <code>{`{ type: 'submitted', surveyId, responseId, answers }`}</code> — fired
                   after the response is accepted. Route the user, hide the form, render a
                   custom thank-you — your call.
+                </li>
+              </ul>
+              <h3 className="text-lg font-semibold text-slate-950">Response tagging</h3>
+              <p>
+                Append your own query params to the survey URL — embedded or standalone —
+                to tag where a response came from (which page, product, tier). Any param
+                that isn&apos;t reserved is captured and stored with the submission as a{' '}
+                <code>metadata</code> object.
+              </p>
+              <CodeBlock code={taggingSnippet} />
+              <p>
+                The tags surface on every response in <code>raw[]</code> from{' '}
+                <code>GET /api/surveys/{'{id}'}/responses</code>, and <code>get_results</code>{' '}
+                prints a per-tag breakdown — so you can segment responses by source without a
+                separate analytics event. Responses with no custom params carry{' '}
+                <code>metadata: {'{}'}</code>.
+              </p>
+              <ul className="list-disc space-y-2 pl-5">
+                <li>
+                  Reserved param: <code>embed</code> — consumed by the renderer, never
+                  stored as metadata. Every other param is captured.
+                </li>
+                <li>
+                  Sanitized on capture: string keys and values only, at most 20 keys, keys
+                  truncated to 64 characters and values to 512. Repeated params keep their
+                  last value.
                 </li>
               </ul>
             </Section>
