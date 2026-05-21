@@ -23,12 +23,14 @@ export async function requireAuth(request: Request): Promise<AuthResult | Respon
       SELECT id
       FROM api_keys
       WHERE key_hash = ${hashApiKey(header.slice(7))}
+        AND revoked_at IS NULL
       LIMIT 1
     `) as Array<{ id: string }>
 
     const row = rows[0]
 
     if (!row) {
+      // Covers unknown keys and revoked keys alike — a revoked key is invalid.
       return NextResponse.json({ error: 'Invalid API key' }, { status: 401 })
     }
 
