@@ -163,7 +163,7 @@ The iframe posts four message types to `window.parent`, each with `source: 'huma
 - `{ source, type: 'mounting',  surveyId }` — fired the instant the iframe HTML is parsed, before the bundle hydrates (use to show a skeleton during cold load)
 - `{ source, type: 'loaded',    surveyId }` — fired once the form is hydrated and interactive
 - `{ source, type: 'resize',    surveyId, height }` — fired whenever content height changes (use to size the iframe)
-- `{ source, type: 'submitted', surveyId, responseId, answers }` — fired after a successful POST to `/api/surveys/{id}/responses`
+- `{ source, type: 'submitted', surveyId, responseId, answers }` — fired after a successful POST to `/api/surveys/{id}/responses`. `answers` is an object keyed by question id (see llms-full.txt for the per-question-type value shape)
 
 The host owns whatever happens after `submitted` — redirect, hide the iframe, render their own thank-you, fire analytics, etc.
 

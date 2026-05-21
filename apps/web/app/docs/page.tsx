@@ -183,6 +183,16 @@ const embedIframeSnippet = `<iframe id="hs-survey"
   })
 </script>`
 
+const answersShapeSnippet = `// e.data.answers — an object keyed by question id (q_0, q_1, ...)
+{
+  "q_0": "We needed it to fail loudly",      // text   -> string
+  "q_1": 4,                                  // scale  -> number, within min..max
+  "q_2": "opt_1",                            // single_choice -> option id
+  "q_3": ["opt_0", "opt_2"],                 // multi_choice  -> array of option ids
+  "q_4": ["row_0:opt_1", "row_1:opt_0"],     // matrix -> "rowId:optionId" per answered row
+  "q_5": "opt_3::Found via a friend"         // choice option with a fill-in text field
+}`
+
 const taggingSnippet = `<!-- ?source and ?tier are captured as response metadata -->
 <iframe src="https://www.humansurvey.co/s/abc123?embed=1&source=pricing&tier=lite"
         style="width:100%; border:0;"></iframe>
@@ -511,9 +521,47 @@ export default function DocsPage() {
                 <li>
                   <code>{`{ type: 'submitted', surveyId, responseId, answers }`}</code> — fired
                   after the response is accepted. Route the user, hide the form, render a
-                  custom thank-you — your call.
+                  custom thank-you — your call. See <em>Answer payload</em> below for the
+                  shape of <code>answers</code>.
                 </li>
               </ul>
+              <h3 className="text-lg font-semibold text-slate-950">Answer payload</h3>
+              <p>
+                The <code>submitted</code> event&apos;s <code>answers</code> is an object
+                keyed by question id (<code>q_0</code>, <code>q_1</code>, … — the ids from
+                the survey schema), not an array. Only questions the respondent actually
+                answered appear; skipped optional questions and questions hidden by
+                conditional logic are omitted. Each value&apos;s type follows the question
+                type:
+              </p>
+              <CodeBlock code={answersShapeSnippet} />
+              <ul className="list-disc space-y-2 pl-5">
+                <li>
+                  <code>text</code> — a string.
+                </li>
+                <li>
+                  <code>scale</code> — a number within the question&apos;s{' '}
+                  <code>min</code>…<code>max</code>.
+                </li>
+                <li>
+                  <code>single_choice</code> — the selected option id as a string.
+                </li>
+                <li>
+                  <code>multi_choice</code> — an array of selected option id strings.
+                </li>
+                <li>
+                  <code>matrix</code> — an array of <code>&quot;rowId:optionId&quot;</code>{' '}
+                  strings, one entry per answered row.
+                </li>
+              </ul>
+              <p>
+                For a choice option that has a fill-in text field, the value carries the
+                typed text after a <code>::</code> separator —{' '}
+                <code>&quot;optionId::the typed text&quot;</code>. Split on the first{' '}
+                <code>::</code> to recover the option id. This is the same{' '}
+                <code>answers</code> object persisted on the response and returned by{' '}
+                <code>get_results</code> / <code>GET /api/surveys/{'{id}'}/responses</code>.
+              </p>
               <h3 className="text-lg font-semibold text-slate-950">Response tagging</h3>
               <p>
                 Append your own query params to the survey URL — embedded or standalone —
