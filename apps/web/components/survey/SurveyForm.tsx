@@ -216,6 +216,7 @@ export function SurveyForm({ surveyId, survey, embedded = false }: SurveyFormPro
               survey={survey}
               questionCount={visibleQuestions.length}
               onStart={start}
+              embedded={embedded}
             />
           ) : currentQuestion ? (
             <QuestionStep
