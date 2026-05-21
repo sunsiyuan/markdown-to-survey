@@ -8,9 +8,15 @@ type WelcomeStepProps = {
   survey: Survey
   questionCount: number
   onStart: () => void
+  embedded?: boolean
 }
 
-export function WelcomeStep({ survey, questionCount, onStart }: WelcomeStepProps) {
+export function WelcomeStep({
+  survey,
+  questionCount,
+  onStart,
+  embedded = false,
+}: WelcomeStepProps) {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null
@@ -43,7 +49,9 @@ export function WelcomeStep({ survey, questionCount, onStart }: WelcomeStepProps
           <button
             type="button"
             onClick={onStart}
-            autoFocus
+            // Skip autofocus when embedded: Chrome blocks autofocus in
+            // cross-origin iframes and logs a console error in the host page.
+            autoFocus={!embedded}
             className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[var(--accent-strong)] px-6 text-sm font-semibold text-white shadow-[0_10px_30px_-15px_rgba(24,33,43,0.6)] transition hover:bg-slate-950 focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
           >
             Start
