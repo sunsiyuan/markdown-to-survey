@@ -324,6 +324,9 @@
         background: #303441;
         border-radius: 4px;
       }
+      .log .log-mounting {
+        color: #fbbf24;
+      }
       .log .log-loaded {
         color: #93c5fd;
       }
@@ -717,7 +720,11 @@
         if (e.data?.source !== 'humansurvey') return
         const iframe = document.getElementById('hs')
         const { type, surveyId } = e.data
-        if (type === 'loaded') {
+        if (type === 'mounting') {
+          // Earliest signal — iframe HTML parsed, bundle not yet interactive.
+          // A real host would reveal a skeleton here instead of a blank spinner.
+          appendLog('[' + ts() + '] mounting surveyId=' + surveyId, 'log-mounting')
+        } else if (type === 'loaded') {
           appendLog('[' + ts() + '] loaded surveyId=' + surveyId, 'log-loaded')
         } else if (type === 'resize') {
           if (iframe) iframe.style.height = e.data.height + 'px'
