@@ -211,11 +211,14 @@ Supported operators:
 
 - **Public** — no auth required
 - Request: `{ "answers": { "q_0": "opt_1", "q_1": ["opt_0", "opt_2"], "q_2": 4, "q_3": "free text" }, "metadata": { "source": "pricing" } }`
+- `answers` is an object keyed by question id (`q_0`, `q_1`, ...), not an array. Only answered questions appear (skipped-optional and conditionally-hidden questions are omitted).
 - Answer value types by question type:
   - `single_choice` → option ID string (e.g. `"opt_0"`)
   - `multi_choice` → array of option ID strings (e.g. `["opt_0", "opt_2"]`)
   - `scale` → number within the defined range (e.g. `4`)
   - `text` → string
+  - `matrix` → array of `"rowId:optionId"` strings, one per answered row (e.g. `["row_0:opt_1", "row_1:opt_0"]`)
+- Choice fill-in text: if a `single_choice`/`multi_choice` option has a text input, its value carries the typed text after a `::` separator — `"optionId::typed text"`. Split on the first `::` for the option id. This same `answers` object is what the embed `submitted` event delivers and what `get_results` returns in `raw[]`.
 - `metadata`: optional response tags. The survey page captures this automatically from custom (non-reserved) URL query params — see Embedding § Response tagging. Sanitized: string values only, at most 20 keys, keys ≤ 64 chars, values ≤ 512 chars.
 - Response 201: `{ "id": "responseId" }`
 - Error 410: `{ "error": "This survey is closed" }` / `"...expired"` / `"...full"`
@@ -278,7 +281,7 @@ The iframe posts to `window.parent` with `source: 'humansurvey'` on every event:
 - `{ source: 'humansurvey', type: 'mounting',  surveyId }` — fired the instant the iframe HTML is parsed, before the form bundle downloads or hydrates. Use it to show a skeleton while the embed cold-loads instead of a blank spinner.
 - `{ source: 'humansurvey', type: 'loaded',    surveyId }` — fired once the form has hydrated and is interactive.
 - `{ source: 'humansurvey', type: 'resize',    surveyId, height }` — fired whenever content height changes. Hosts use this to auto-size the iframe so there is no inner scrollbar.
-- `{ source: 'humansurvey', type: 'submitted', surveyId, responseId, answers }` — fired after a successful POST to `/api/surveys/{id}/responses`.
+- `{ source: 'humansurvey', type: 'submitted', surveyId, responseId, answers }` — fired after a successful POST to `/api/surveys/{id}/responses`. `answers` is keyed by question id; see the answer value types under `POST /api/surveys/{id}/responses` for the per-type shape.
 
 There is no `redirect` / `callback` / `message+html` mode — the host JS decides what to do on `submitted` (route the user, hide the iframe, render a custom thank-you, fire analytics, etc.).
 

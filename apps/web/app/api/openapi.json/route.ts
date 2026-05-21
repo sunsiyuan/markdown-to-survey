@@ -370,7 +370,7 @@ const openApiDocument = {
                 properties: {
                   answers: {
                     type: 'object',
-                    description: 'Map of question ID to answer value. single_choice: "opt_0", multi_choice: ["opt_0", "opt_2"], scale: 4, text: "free text"',
+                    description: 'Map of question ID (q_0, q_1, ...) to answer value; only answered questions appear. single_choice: option ID string e.g. "opt_0". multi_choice: array of option ID strings e.g. ["opt_0", "opt_2"]. scale: number within min..max e.g. 4. text: string. matrix: array of "rowId:optionId" strings, one per answered row e.g. ["row_0:opt_1"]. If a choice option has a fill-in text field, its value is "optionId::typed text" — split on the first "::" for the option ID. This is also the shape delivered by the embed "submitted" postMessage.',
                     additionalProperties: {
                       oneOf: [
                         { type: 'string' },
