@@ -435,16 +435,23 @@ export default function DocsPage() {
                 Drop a HumanSurvey form into any third-party page (landing page, onboarding step,
                 in-app form) by appending <code>?embed=1</code> to the survey URL. The iframe
                 renders without the site chrome and emits <code>postMessage</code> events to the
-                host on load, content resize, and submission — the host owns whatever happens
-                after submission.
+                host on mount, load, content resize, and submission — the host owns whatever
+                happens after submission.
               </p>
               <CodeBlock code={embedIframeSnippet} />
               <p>
-                Three event types, all with <code>source: &apos;humansurvey&apos;</code>:
+                Four event types, all with <code>source: &apos;humansurvey&apos;</code>:
               </p>
               <ul className="list-disc space-y-2 pl-5">
                 <li>
-                  <code>{`{ type: 'loaded', surveyId }`}</code> — fired once on mount.
+                  <code>{`{ type: 'mounting', surveyId }`}</code> — fired the instant the
+                  iframe HTML is parsed, before the form bundle downloads or hydrates.
+                  Use it to swap your blank spinner for a skeleton while the embed
+                  cold-loads.
+                </li>
+                <li>
+                  <code>{`{ type: 'loaded', surveyId }`}</code> — fired once the form has
+                  hydrated and is interactive.
                 </li>
                 <li>
                   <code>{`{ type: 'resize', surveyId, height }`}</code> — fired whenever content

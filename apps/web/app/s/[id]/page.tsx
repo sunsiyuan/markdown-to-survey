@@ -46,16 +46,38 @@ export default async function SurveyPage({ params, searchParams }: PageProps) {
     notFound()
   }
 
+  // Embed-only: an inline script that posts `mounting` to the host the instant the
+  // iframe HTML is parsed — well before the React bundle downloads and hydrates
+  // (which is when `loaded` fires). Lets the host swap its blank spinner for a
+  // skeleton during the cold load instead of waiting seconds for `loaded`.
+  const mountingSignal = embedded ? (
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `(function(){try{parent.postMessage({source:'humansurvey',type:'mounting',surveyId:${JSON.stringify(
+          data.id,
+        )}},'*')}catch(e){}})()`,
+      }}
+    />
+  ) : null
+
   if (isSurveyClosed(data)) {
-    return <SurveyClosed title={data.title} surveyId={data.id} embedded={embedded} />
+    return (
+      <>
+        {mountingSignal}
+        <SurveyClosed title={data.title} surveyId={data.id} embedded={embedded} />
+      </>
+    )
   }
 
   return (
-    <SurveyForm
-      surveyId={data.id}
-      survey={parseJsonValue<Survey>(data.schema)}
-      embedded={embedded}
-      metadata={tags}
-    />
+    <>
+      {mountingSignal}
+      <SurveyForm
+        surveyId={data.id}
+        survey={parseJsonValue<Survey>(data.schema)}
+        embedded={embedded}
+        metadata={tags}
+      />
+    </>
   )
 }
