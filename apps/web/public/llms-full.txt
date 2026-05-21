@@ -163,12 +163,13 @@ Supported operators:
 ### `GET /api/keys`
 
 - Auth required
-- Returns metadata (id, name, created_at) for the current key — key value is not returned
+- Returns metadata (id, name, created_at, last_used_at) for the current key — key value is not returned. A key only sees itself; there is no account grouping multiple keys.
 
 ### `DELETE /api/keys/{id}`
 
-- Auth required
-- Revokes the current key. Surveys remain but key can no longer call creator endpoints.
+- Auth required; `{id}` must be the current key's own id (a key can only revoke itself)
+- Revokes the current key. Surveys remain (hosted `/s/{id}` URLs keep accepting responses) but the key can no longer call creator endpoints.
+- No in-place rotation: to rotate, `POST /api/keys` for a replacement, move the integration to it, then `DELETE` the old key. A survey is owned by its creating key, so the new key cannot read results for surveys created under the old key — re-create any still-needed surveys under the new key.
 
 ### `POST /api/surveys`
 
