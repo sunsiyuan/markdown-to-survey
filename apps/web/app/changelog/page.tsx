@@ -17,6 +17,18 @@ type Entry = {
 
 const entries: Entry[] = [
   {
+    date: '2026-05-22',
+    title: 'Embed hardening — response tagging, early mount signal, working key revocation',
+    items: [
+      'Response tagging — custom (non-reserved) query params on the survey URL, e.g. ?source=pricing&tier=lite, are captured and stored with the response as a metadata object. They surface on every raw[] entry of GET /api/surveys/{id}/responses and as a per-tag breakdown in get_results, so hosts can segment responses by source without a separate analytics event. Sanitized server-side: string keys/values only, at most 20 keys. Migration 008 adds responses.metadata.',
+      'Embed mounting signal — the iframe now posts { type: "mounting", surveyId } the instant its HTML is parsed, before the bundle downloads or hydrates. Hosts can show a skeleton during the ~3s cold load instead of a blank spinner; loaded still fires once the form is interactive. The postMessage contract is now four events: mounting, loaded, resize, submitted.',
+      'API key revocation fixed — DELETE /api/keys/{id} previously returned 500 for any key that had created a survey (a hard delete violated the surveys.api_key_id foreign key). It now soft-deletes via a revoked_at stamp, and requireAuth rejects revoked keys. Migration 009 adds api_keys.revoked_at.',
+      'Embedded surveys no longer log a cross-origin console error in host pages — the Start button skips autofocus when embedded.',
+      'Docs — new Embed subsections (Response tagging, Answer payload — the answers payload is now documented per question type), a Key management section under Authentication, and the four-event postMessage contract. OpenAPI, llms.txt, and llms-full.txt all updated.',
+      'humansurvey-mcp 0.6.0 — get_results prints a per-tag breakdown across the response set; the published npm package is restricted to dist via a files allowlist.',
+    ],
+  },
+  {
     date: '2026-04-30',
     title: 'Async results loop — cursor reads, expired webhook, threshold notification',
     items: [
