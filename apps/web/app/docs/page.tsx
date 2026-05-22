@@ -4,7 +4,28 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: 'Docs — HumanSurvey',
   description:
-    'Authentication, JSON schema input, API routes, MCP tools, and conditional logic for HumanSurvey.',
+    'Authentication, JSON schema input, API routes, embed, async results, and MCP tools for HumanSurvey — the feedback-collection API for AI agents.',
+  alternates: {
+    canonical: '/docs',
+  },
+}
+
+const techArticleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: 'HumanSurvey API & MCP reference',
+  description:
+    'Authentication, JSON schema input, API routes, embed, async results, MCP tools, and conditional logic for HumanSurvey — the feedback-collection API for AI agents.',
+  datePublished: '2026-04-06',
+  dateModified: '2026-05-22',
+  author: { '@type': 'Organization', name: 'HumanSurvey' },
+  publisher: { '@type': 'Organization', name: 'HumanSurvey' },
+  mainEntityOfPage: 'https://www.humansurvey.co/docs',
+  about: {
+    '@type': 'SoftwareApplication',
+    name: 'HumanSurvey',
+    applicationCategory: 'DeveloperApplication',
+  },
 }
 
 const authSnippet = `curl -X POST https://www.humansurvey.co/api/keys \\
@@ -290,6 +311,10 @@ function Section({
 export default function DocsPage() {
   return (
     <main className="min-h-screen bg-[var(--page-gradient)]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(techArticleJsonLd) }}
+      />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <header className="rounded-[1.75rem] border border-[var(--panel-border)] bg-[var(--surface)] p-6 shadow-[0_28px_90px_-68px_rgba(14,23,38,0.38)] sm:p-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
